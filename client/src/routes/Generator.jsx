@@ -1,10 +1,34 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import Editor from '@monaco-editor/react'
 
 const Generator = () => {
   const [currentStep, setCurrentStep] = useState(0)
   const [selectedFile, setSelectedFile] = useState('index.html')
-  const [code, setCode] = useState(dummyFiles['index.html'])
+  const [files, setFiles] = useState({})
+  const [code, setCode] = useState('')
+
+  useEffect(() => {
+    // Load generated files from localStorage
+    const generatedFiles = localStorage.getItem('generatedFiles');
+    if (generatedFiles) {
+      const parsedFiles = JSON.parse(generatedFiles);
+      setFiles(parsedFiles);
+      setCode(parsedFiles[selectedFile] || '');
+    }
+  }, [selectedFile]);
+
+  // Auto progress through steps
+  useEffect(() => {
+    const stepDurations = [1000, 1000, 1000, 1000]; // Duration for each step in milliseconds
+    
+    if (currentStep < steps.length - 1) {
+      const timer = setTimeout(() => {
+        setCurrentStep(prev => prev + 1);
+      }, stepDurations[currentStep]);
+
+      return () => clearTimeout(timer);
+    }
+  }, [currentStep]);
 
   const steps = [
     {
@@ -29,23 +53,52 @@ const Generator = () => {
     }
   ]
 
+  const fileStructure = {
+    'src': ['index.html', 'styles.css', 'script.js']
+  };
+
+  const getFileLanguage = (filename) => {
+    const ext = filename.split('.').pop()
+    const languages = {
+      html: 'html',
+      css: 'css',
+      js: 'javascript'
+    }
+    return languages[ext] || 'plaintext'
+  }
+
+  // Progress bar calculation
+  const progressPercentage = ((currentStep + 1) / steps.length) * 100;
+
   return (
     <div className="flex h-screen pt-16">
       {/* Left Side - Steps */}
       <div className="w-72 border-r border-gray-800 bg-gray-900/50">
         <div className="p-6">
-          <h2 className="text-xl font-bold mb-8 bg-gradient-to-r from-indigo-400 to-blue-500 text-transparent bg-clip-text">
-            Generation Progress
-          </h2>
+          <div className="flex items-center justify-between mb-8">
+            <h2 className="text-xl font-bold bg-gradient-to-r from-indigo-400 to-blue-500 text-transparent bg-clip-text">
+              Generation Progress
+            </h2>
+            <span className="text-sm text-gray-400">{Math.round(progressPercentage)}%</span>
+          </div>
+
+          {/* Progress Bar */}
+          <div className="h-1 w-full bg-gray-700 rounded-full mb-8 overflow-hidden">
+            <div 
+              className="h-full bg-gradient-to-r from-indigo-500 to-blue-500 transition-all duration-500 ease-out"
+              style={{ width: `${progressPercentage}%` }}
+            />
+          </div>
+
           <div className="space-y-8">
             {steps.map((step, index) => (
               <div key={index} className="relative">
                 {index !== steps.length - 1 && (
-                  <div className={`absolute left-[15px] top-[30px] w-[2px] h-[calc(100%+32px)] 
+                  <div className={`absolute left-[15px] top-[30px] w-[2px] h-[calc(100%+32px)] transition-colors duration-500
                     ${index < currentStep ? 'bg-indigo-500' : 'bg-gray-700'}`} />
                 )}
                 <div className="flex items-start gap-4">
-                  <div className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0
+                  <div className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 transition-colors duration-500
                     ${index === currentStep ? 'bg-indigo-500 animate-pulse' : 
                       index < currentStep ? 'bg-indigo-500' : 'bg-gray-700'}`}>
                     {index < currentStep ? (
@@ -57,7 +110,7 @@ const Generator = () => {
                     )}
                   </div>
                   <div>
-                    <h3 className={`font-medium ${index === currentStep ? 'text-indigo-400' : 'text-gray-300'}`}>
+                    <h3 className={`font-medium transition-colors duration-500 ${index === currentStep ? 'text-indigo-400' : 'text-gray-300'}`}>
                       {step.title}
                     </h3>
                     <p className="text-sm text-gray-500 mt-1">{step.description}</p>
@@ -67,12 +120,13 @@ const Generator = () => {
             ))}
           </div>
 
-          <button 
-            onClick={() => setCurrentStep(prev => Math.min(prev + 1, steps.length - 1))}
-            className="w-full py-3 mt-8 text-sm font-semibold bg-gradient-to-r from-indigo-600 to-blue-500 hover:from-indigo-700 hover:to-blue-600 transition-all duration-300 rounded-lg flex items-center justify-center gap-2"
-          >
-            {currentStep === steps.length - 1 ? 'Deploy Website' : 'Next Step'}
-          </button>
+          {currentStep === steps.length - 1 && (
+            <button 
+              className="w-full py-3 mt-4 text-sm font-semibold bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 transition-all duration-300 rounded-lg flex items-center justify-center gap-2"
+            >
+              <button>Add more details</button>
+            </button>
+          )}
         </div>
       </div>
 
@@ -85,36 +139,28 @@ const Generator = () => {
             </svg>
             Project Files
           </h3>
-          <div className="space-y-4">
-            {Object.entries(fileStructure).map(([folder, files]) => (
-              <div key={folder} className="border border-gray-800 rounded-lg overflow-hidden">
-                <div className="flex items-center gap-2 text-gray-300 p-2 bg-gray-800/50">
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z" />
-                  </svg>
-                  <span className="text-sm font-medium">{folder}</span>
-                </div>
-                <div className="p-2 space-y-1">
-                  {files.map(file => (
-                    <button
-                      key={file}
-                      onClick={() => {
-                        setSelectedFile(file)
-                        setCode(dummyFiles[file])
-                      }}
-                      className={`flex items-center gap-2 text-sm p-2 rounded-md w-full text-left
-                        ${selectedFile === file 
-                          ? 'bg-indigo-500/10 text-indigo-400' 
-                          : 'text-gray-400 hover:bg-gray-800/50'
-                        } transition-colors`}
-                    >
-                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                      </svg>
-                      {file}
-                    </button>
-                  ))}
-                </div>
+          <div className="space-y-1">
+            {Object.entries(fileStructure).map(([folder, fileList]) => (
+              <div key={folder}>
+                {fileList.map(file => (
+                  <button
+                    key={file}
+                    onClick={() => {
+                      setSelectedFile(file);
+                      setCode(files[file] || '');
+                    }}
+                    className={`flex items-center gap-2 text-sm p-2 rounded-md w-full text-left
+                      ${selectedFile === file 
+                        ? 'bg-indigo-500/10 text-indigo-400' 
+                        : 'text-gray-400 hover:bg-gray-800/50'
+                      } transition-colors`}
+                  >
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                    </svg>
+                    {file}
+                  </button>
+                ))}
               </div>
             ))}
           </div>
@@ -127,25 +173,20 @@ const Generator = () => {
           <Editor
             height="100%"
             defaultLanguage={getFileLanguage(selectedFile)}
+            language={getFileLanguage(selectedFile)}
             theme="vs-dark"
-            value={code}
-            onChange={setCode}
+            value={files[selectedFile] || ''}
             options={{
               minimap: { enabled: false },
               fontSize: 14,
               padding: { top: 20 },
+              readOnly: false
             }}
           />
         </div>
       </div>
     </div>
   )
-}
-
-const fileStructure = {
-  'src': ['index.html', 'styles.css', 'main.js'],
-  'components': ['Header.jsx', 'Hero.jsx', 'Features.jsx'],
-  'assets': ['logo.svg', 'hero-image.png']
 }
 
 const dummyFiles = {
@@ -197,19 +238,6 @@ export default function Header() {
         </header>
     );
 }`
-}
-
-const getFileLanguage = (filename) => {
-  const ext = filename.split('.').pop()
-  const languages = {
-    html: 'html',
-    css: 'css',
-    js: 'javascript',
-    jsx: 'javascript',
-    svg: 'xml',
-    png: 'plaintext'
-  }
-  return languages[ext] || 'plaintext'
 }
 
 export default Generator 
