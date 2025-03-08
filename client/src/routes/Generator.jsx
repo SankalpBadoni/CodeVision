@@ -6,6 +6,9 @@ const Generator = () => {
   const [selectedFile, setSelectedFile] = useState('index.html')
   const [files, setFiles] = useState({})
   const [code, setCode] = useState('')
+  const [isAddingDetails, setIsAddingDetails] = useState(false)
+  const [additionalDetails, setAdditionalDetails] = useState('')
+  const [isRegenerating, setIsRegenerating] = useState(false)
 
   useEffect(() => {
     // Load generated files from localStorage
@@ -19,9 +22,9 @@ const Generator = () => {
 
   // Auto progress through steps
   useEffect(() => {
-    const stepDurations = [1000, 1000, 1000, 1000]; // Duration for each step in milliseconds
+    const stepDurations = [1000, 1000, 1000, 0]; // Duration for each step in milliseconds
     
-    if (currentStep < steps.length - 1) {
+    if (currentStep <= steps.length - 1) {
       const timer = setTimeout(() => {
         setCurrentStep(prev => prev + 1);
       }, stepDurations[currentStep]);
@@ -68,7 +71,42 @@ const Generator = () => {
   }
 
   // Progress bar calculation
-  const progressPercentage = ((currentStep + 1) / steps.length) * 100;
+  const progressPercentage = ((currentStep ) / steps.length) * 100;
+
+  const handleRegenerateCode = async () => {
+    try {
+      setIsRegenerating(true);
+      setCurrentStep(0); // Reset progress
+
+      const response = await fetch('http://localhost:5000/api/generate', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ 
+          prompt: additionalDetails,
+          existingFiles: files // Send existing files for context
+        }),
+      });
+
+      const data = await response.json();
+      
+      if (data.success) {
+        localStorage.setItem('generatedFiles', JSON.stringify(data.files));
+        setFiles(data.files);
+        setCode(data.files[selectedFile] || '');
+        setIsAddingDetails(false);
+        setAdditionalDetails('');
+      } else {
+        throw new Error(data.error || 'Failed to regenerate code');
+      }
+    } catch (error) {
+      console.error('Error:', error);
+      alert(error.message || 'An error occurred while regenerating the code.');
+    } finally {
+      setIsRegenerating(false);
+    }
+  };
 
   return (
     <div className="flex h-screen pt-16">
@@ -120,13 +158,7 @@ const Generator = () => {
             ))}
           </div>
 
-          {currentStep === steps.length - 1 && (
-            <button 
-              className="w-full py-3 mt-4 text-sm font-semibold bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 transition-all duration-300 rounded-lg flex items-center justify-center gap-2"
-            >
-              <button>Add more details</button>
-            </button>
-          )}
+          
         </div>
       </div>
 
@@ -163,6 +195,70 @@ const Generator = () => {
                 ))}
               </div>
             ))}
+            {currentStep === steps.length - 1 && (
+            <div className="mt-4">
+              {!isAddingDetails ? (
+                <button 
+                  onClick={() => setIsAddingDetails(true)}
+                  className="w-full py-3 text-sm font-semibold bg-gradient-to-r from-indigo-600 to-blue-500 hover:from-indigo-700 hover:to-blue-600 transition-all duration-300 rounded-lg flex items-center justify-center gap-2"
+                >
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                  </svg>
+                  <span>Add more details</span>
+                </button>
+              ) : (
+                <div className="space-y-3">
+                  <div className="p-[1px] rounded-lg bg-gradient-to-r from-indigo-500 to-blue-500">
+                    <textarea
+                      value={additionalDetails}
+                      onChange={(e) => setAdditionalDetails(e.target.value)}
+                      placeholder="Add more details about what you'd like to change or add..."
+                      className="w-full p-3 rounded-lg bg-gray-900/90 border-none focus:outline-none text-white placeholder-gray-400 text-sm"
+                      rows={4}
+                    />
+                  </div>
+                  <div className="flex gap-2">
+                    <button
+                      onClick={handleRegenerateCode}
+                      disabled={isRegenerating || !additionalDetails.trim()}
+                      className={`flex-1 py-2 text-sm font-semibold bg-gradient-to-r from-green-500 to-emerald-500 
+                        hover:from-green-600 hover:to-emerald-600 transition-all duration-300 rounded-lg 
+                        flex items-center justify-center gap-2
+                        ${(isRegenerating || !additionalDetails.trim()) && 'opacity-50 cursor-not-allowed'}`}
+                    >
+                      {isRegenerating ? (
+                        <>
+                          <svg className="animate-spin h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                          </svg>
+                          <span>Regenerating...</span>
+                        </>
+                      ) : (
+                        <>
+                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                          </svg>
+                          <span>Regenerate</span>
+                        </>
+                      )}
+                    </button>
+                    <button
+                      onClick={() => {
+                        setIsAddingDetails(false);
+                        setAdditionalDetails('');
+                      }}
+                      className="py-2 px-4 text-sm font-semibold bg-gray-800 hover:bg-gray-700 
+                        transition-all duration-300 rounded-lg text-gray-300"
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
           </div>
         </div>
       </div>
