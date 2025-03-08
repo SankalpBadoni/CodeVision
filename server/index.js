@@ -49,7 +49,7 @@ app.post('/api/generate', async (req, res) => {
     // Complete script.js code here with all functionality
     \`\`\`
 
-    Ensure each file is complete and can work together. Include comments explaining key sections.`;
+    Ensure each file is complete and can work together.`;
 
     const result = await model.generateContent(promptTemplate);
     const response = await result.response;
