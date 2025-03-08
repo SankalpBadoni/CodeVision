@@ -6,10 +6,35 @@ import { TextRevealCardTitle } from '../components/TitleCard';
 
 const Home = () => {
   const [prompt, setPrompt] = useState('')
+  const [isLoading, setIsLoading] = useState(false)
   const navigate = useNavigate()
 
-  const handleGenerate = () => {
-    navigate('/generator')
+  const handleGenerate = async () => {
+    try {
+      setIsLoading(true);
+      const response = await fetch('http://localhost:5000/api/generate', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ prompt }),
+      });
+
+      const data = await response.json();
+      
+      if (data.success) {
+        localStorage.setItem('generatedFiles', JSON.stringify(data.files));
+        navigate('/generator');
+      } else {
+        throw new Error(data.error || 'Failed to generate code');
+      }
+    } catch (error) {
+      console.error('Error:', error);
+      // Add a visual error message
+      alert(error.message || 'An error occurred while generating the code. Please try again.');
+    } finally {
+      setIsLoading(false);
+    }
   }
 
   return (
@@ -62,22 +87,28 @@ const Home = () => {
           </div>
           <button 
             onClick={handleGenerate}
-            className="w-full py-4 text-lg font-semibold bg-gradient-to-r from-indigo-600 to-blue-500 hover:from-indigo-700 hover:to-blue-600 transition-all duration-300 shadow-lg hover:shadow-xl rounded-lg flex items-center justify-center gap-2 hover:scale-[1.02] cursor-pointer"
+            disabled={isLoading || !prompt.trim()}
+            className={`w-full py-4 text-lg font-semibold bg-gradient-to-r from-indigo-600 to-blue-500 
+              hover:from-indigo-700 hover:to-blue-600 transition-all duration-300 shadow-lg 
+              hover:shadow-xl rounded-lg flex items-center justify-center gap-2 
+              ${(isLoading || !prompt.trim()) && 'opacity-50 cursor-not-allowed'}`}
           >
-            <span>Generate Your Website</span>
-            <svg 
-              className="w-5 h-5" 
-              fill="none" 
-              stroke="currentColor" 
-              viewBox="0 0 24 24"
-            >
-              <path 
-                strokeLinecap="round" 
-                strokeLinejoin="round" 
-                strokeWidth={2} 
-                d="M13 10V3L4 14h7v7l9-11h-7z"
-              />
-            </svg>
+            {isLoading ? (
+              <>
+                <svg className="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+                <span>Generating...</span>
+              </>
+            ) : (
+              <>
+                <span>Generate Your Website</span>
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                </svg>
+              </>
+            )}
           </button>
           <p className="text-sm text-gray-500">Enterprise-grade development • Instant deployment • No coding required</p>
         </div>
