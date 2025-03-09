@@ -1,18 +1,36 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import Editor from '@monaco-editor/react'
+import { Link } from 'react-router-dom'
 
 const Generator = () => {
   const [prompt, setPrompt] = useState('')
   const [isLoading, setIsLoading] = useState(false)
-  const [files, setFiles] = useState({
-    'index.html': '',
-    'styles.css': '',
-    'script.js': ''
+  const [files, setFiles] = useState(() => {
+    // Initialize files from localStorage or use empty state
+    const savedFiles = localStorage.getItem('generatedFiles')
+    return savedFiles ? JSON.parse(savedFiles) : {
+      'index.html': '',
+      'styles.css': '',
+      'script.js': ''
+    }
   })
   const [selectedFile, setSelectedFile] = useState('index.html')
   const [messages, setMessages] = useState([
     { role: 'ai', content: 'I have generated the website based on your requirements. You can view and edit the files in the editor.' }
   ])
+
+  // Load files from localStorage when component mounts
+  useEffect(() => {
+    const savedFiles = localStorage.getItem('generatedFiles')
+    if (savedFiles) {
+      setFiles(JSON.parse(savedFiles))
+    }
+  }, [])
+
+  // Save files to localStorage whenever they change
+  useEffect(() => {
+    localStorage.setItem('generatedFiles', JSON.stringify(files))
+  }, [files])
 
   const fileStructure = {
     'src': ['index.html', 'styles.css', 'script.js']
@@ -70,9 +88,12 @@ const Generator = () => {
       <div className="w-1/3 border-r border-gray-800 bg-gray-900/50 flex flex-col h-screen">
         {/* Chat header */}
         <div className="p-4 border-b border-gray-800 bg-gray-900/90 backdrop-blur-sm">
+        <Link to="/">
+        
           <h2 className="text-lg font-semibold bg-gradient-to-r from-indigo-400 to-blue-500 text-transparent bg-clip-text">
             CodeVision
           </h2>
+        </Link>
         </div>
 
         {/* Chat Messages - Add padding and better spacing */}
