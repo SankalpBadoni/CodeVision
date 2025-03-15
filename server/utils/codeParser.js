@@ -22,6 +22,4 @@ function parseGeneratedCode(text) {
   return files;
 }
 
-module.exports = {
-  parseGeneratedCode
-}; 
+export { parseGeneratedCode }; 

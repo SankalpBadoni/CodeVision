@@ -1,5 +1,7 @@
-const { GoogleGenerativeAI } = require('@google/generative-ai');
-require('dotenv').config();
+import { GoogleGenerativeAI } from '@google/generative-ai';
+import dotenv from 'dotenv';
+
+dotenv.config();
 
 // Validate API key
 if (!process.env.GEMINI_API_KEY) {
@@ -9,6 +11,4 @@ if (!process.env.GEMINI_API_KEY) {
 
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 
-module.exports = {
-  genAI
-}; 
+export { genAI }; 

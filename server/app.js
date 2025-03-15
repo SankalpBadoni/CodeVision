@@ -1,6 +1,6 @@
-const express = require('express');
-const cors = require('cors');
-const generatorRoutes = require('./routes/generator');
+import express from 'express';
+import cors from 'cors';
+import generatorRoutes from './routes/generator.js';
 
 const app = express();
 const PORT = process.env.PORT || 5000;
