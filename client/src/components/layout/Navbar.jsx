@@ -10,12 +10,13 @@ const Navbar = () => {
           
           <div className="hidden md:flex items-center space-x-8">
             <Link to="/dashboard" className="hover:text-purple-400 transition">Dashboard</Link>
-            <Link to="/projects" className="hover:text-purple-400 transition">Projects</Link>
+            
+            <Link to="/login">
             <button 
               className="px-4 py-2 rounded-lg bg-gradient-to-r from-indigo-600 to-blue-500 hover:from-indigo-700 hover:to-blue-600 text-white transition-all duration-300 shadow-lg hover:shadow-xl hover:scale-[1.02] cursor-pointer"
             >
               Get Started
-            </button>
+            </button></Link>
           </div>
         </div>
       </div>

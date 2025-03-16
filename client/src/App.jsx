@@ -4,7 +4,8 @@ import Footer from './components/layout/Footer'
 import Home from './routes/Home'
 import Dashboard from './routes/Dashboard'
 import Generator from './routes/Generator'
-
+import LoginPage from './routes/Login'
+import SignupPage from './routes/Signup'
 const Layout = ({ children }) => {
   const location = useLocation()
   const isGeneratorPage = location.pathname === '/generator'
@@ -28,6 +29,8 @@ function App() {
           <Route path="/" element={<Home />} />
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/generator" element={<Generator />} />
+          <Route path="/login" element={<LoginPage />} />
+          <Route path="/signup" element={<SignupPage />} />
         </Routes>
       </Layout>
     </Router>
