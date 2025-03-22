@@ -23,6 +23,11 @@ const Home = () => {
       const data = await response.json();
       
       if (data.success) {
+        // Clear previous project data to start fresh
+        localStorage.removeItem('chatMessages');
+        localStorage.removeItem('currentProjectId');
+        
+        // Save new generated files
         localStorage.setItem('generatedFiles', JSON.stringify(data.files));
         navigate('/generator');
       } else {
