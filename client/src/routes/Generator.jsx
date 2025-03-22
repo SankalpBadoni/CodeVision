@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import Editor from "@monaco-editor/react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { Clipboard } from "lucide-react";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
@@ -20,20 +20,32 @@ const Generator = () => {
         };
   });
   const [selectedFile, setSelectedFile] = useState("index.html");
-  const [messages, setMessages] = useState([
-    {
-      role: "ai",
-      content:
-        "I have generated the website based on your requirements. You can view and edit the files in the editor.",
-    },
-  ]);
+  const [messages, setMessages] = useState(() => {
+    // Initialize messages from localStorage or use default
+    const savedMessages = localStorage.getItem("chatMessages");
+    return savedMessages
+      ? JSON.parse(savedMessages)
+      : [
+          {
+            role: "ai",
+            content:
+              "I have generated the website based on your requirements. You can view and edit the files in the editor.",
+          },
+        ];
+  });
+  const [currentProjectId, setCurrentProjectId] = useState(() => {
+    return localStorage.getItem("currentProjectId") || null;
+  });
+  const navigate = useNavigate();
 
+  // Copy file to clipboard
   const copyFile = () => {
     const fileContent = files[selectedFile];
     navigator.clipboard.writeText(fileContent);
-    toast.success("File copied to clipboard", { autoClose: 2000 });
+    toast.success("File copied to clipboard");
   };
-
+  
+  // Load files from localStorage when component mounts
   useEffect(() => {
     const savedFiles = localStorage.getItem("generatedFiles");
     if (savedFiles) {
@@ -41,12 +53,80 @@ const Generator = () => {
     }
   }, []);
 
+  // Save files to localStorage whenever they change
   useEffect(() => {
     localStorage.setItem("generatedFiles", JSON.stringify(files));
+    
+    // Also save to current project if it exists
+    if (currentProjectId) {
+      saveProjectData();
+    }
   }, [files]);
 
-  const fileStructure = {
-    src: ["index.html", "styles.css", "script.js"],
+  // Save messages to localStorage whenever they change
+  useEffect(() => {
+    localStorage.setItem("chatMessages", JSON.stringify(messages));
+    
+    // Also save to current project if it exists
+    if (currentProjectId) {
+      saveProjectData();
+    }
+  }, [messages]);
+
+  // Function to save current project data
+  const saveProjectData = () => {
+    const projects = JSON.parse(localStorage.getItem("userProjects") || "[]");
+    const projectIndex = projects.findIndex(p => p.id === currentProjectId);
+    
+    if (projectIndex !== -1) {
+      // Update existing project
+      projects[projectIndex].files = files;
+      projects[projectIndex].messages = messages;
+      localStorage.setItem("userProjects", JSON.stringify(projects));
+    } else if (currentProjectId) {
+      // Create new project with generated ID
+      const newProject = {
+        id: currentProjectId,
+        name: `Project ${new Date().toLocaleDateString()}`,
+        description: "Generated website",
+        date: new Date().toISOString(),
+        files: files,
+        messages: messages
+      };
+      
+      projects.push(newProject);
+      localStorage.setItem("userProjects", JSON.stringify(projects));
+    }
+  };
+
+  // Save as new project
+  const saveAsNewProject = () => {
+    const projects = JSON.parse(localStorage.getItem("userProjects") || "[]");
+    const projectName = prompt("Enter a name for your project:");
+    
+    if (!projectName) return;
+    
+    const newProjectId = Date.now().toString();
+    const newProject = {
+      id: newProjectId,
+      name: projectName,
+      description: "Custom website project",
+      date: new Date().toISOString(),
+      files: files,
+      messages: messages
+    };
+    
+    projects.push(newProject);
+    localStorage.setItem("userProjects", JSON.stringify(projects));
+    localStorage.setItem("currentProjectId", newProjectId);
+    setCurrentProjectId(newProjectId);
+    
+    toast.success("Project saved successfully!");
+  };
+
+  // Go to dashboard
+  const goToDashboard = () => {
+    navigate("/dashboard");
   };
 
   const handleGenerate = async () => {
@@ -59,13 +139,19 @@ const Generator = () => {
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ prompt }),
+        body: JSON.stringify({ 
+          prompt,
+          selectedFile 
+        }),
       });
 
       const data = await response.json();
 
       if (data.success) {
+        // Update files
         setFiles(data.files);
+        
+        // Add AI response to chat
         setMessages((prev) => [
           ...prev,
           {
@@ -74,6 +160,13 @@ const Generator = () => {
               "I have generated the website based on your requirements. You can view and edit the files in the editor.",
           },
         ]);
+        
+        // If this is a new generation (not from a project), create a project ID
+        if (!currentProjectId) {
+          const newProjectId = Date.now().toString();
+          localStorage.setItem("currentProjectId", newProjectId);
+          setCurrentProjectId(newProjectId);
+        }
       } else {
         throw new Error(data.error || "Failed to generate code");
       }
@@ -105,23 +198,50 @@ const Generator = () => {
 
   return (
     <div className="flex h-screen bg-gray-900">
-      <ToastContainer
+      <ToastContainer 
         position="bottom-right"
-        autoClose={2000}
+        autoClose={3000}
         hideProgressBar={false}
         newestOnTop={false}
         closeOnClick
+        rtl={false}
+        pauseOnFocusLoss
         draggable
+        pauseOnHover
         theme="dark"
       />
-
+      
+      {/* Left Side - Chat */}
       <div className="w-1/3 border-r border-gray-800 bg-gray-900/50 flex flex-col h-screen">
-        <div className="p-4 border-b border-gray-800 bg-gray-900/90 backdrop-blur-sm">
+        {/* Chat header */}
+        <div className="p-4 border-b border-gray-800 bg-gray-900/90 backdrop-blur-sm flex items-center justify-between">
           <Link to="/">
             <h2 className="text-lg font-semibold bg-gradient-to-r from-indigo-400 to-blue-500 text-transparent bg-clip-text">
               CodeVision
             </h2>
           </Link>
+          
+          <div className="flex space-x-3">
+            <button
+              onClick={saveAsNewProject}
+              className="text-xs px-3 py-1 bg-indigo-500/10 text-indigo-400 rounded-md hover:bg-indigo-500/20 transition-colors flex items-center gap-1"
+            >
+              <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4" />
+              </svg>
+              Save Project
+            </button>
+            
+            <button
+              onClick={goToDashboard}
+              className="text-xs px-3 py-1 bg-gray-700/20 text-gray-400 rounded-md hover:bg-gray-700/30 transition-colors flex items-center gap-1"
+            >
+              <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 10h16M4 14h16M4 18h16" />
+              </svg>
+              Projects
+            </button>
+          </div>
         </div>
 
         {/* Chat Messages - Add padding and better spacing */}
@@ -307,10 +427,7 @@ const Generator = () => {
               </svg>
             </button>
 
-            <button
-              onClick={copyFile}
-              className="p-2 text-gray-400 hover:text-indigo-400 transition-colors rounded-md hover:bg-gray-800"
-            >
+            <button onClick={copyFile} className="p-2 text-gray-400 hover:text-indigo-400 transition-colors rounded-md hover:bg-gray-800">
               <Clipboard className="w-4 h-4" />
             </button>
           </div>
