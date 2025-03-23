@@ -1,6 +1,8 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import axios from 'axios';
+import { useDispatch } from 'react-redux';
+import { login } from '../redux/slices/AuthSlice';
 
 const LoginPage = () => {
   const [email, setEmail] = useState('');
@@ -8,13 +10,14 @@ const LoginPage = () => {
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
+  const dispatch = useDispatch();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
     setIsLoading(true);
 
-    // Simple validation
+   
     if (!email || !password) {
       setError('Please fill in all fields');
       setIsLoading(false);
@@ -30,13 +33,7 @@ const LoginPage = () => {
       });
 
       
-      localStorage.setItem('isLoggedIn', 'true');
-      localStorage.setItem('userEmail', email);
-      
-      // Dispatch login event to update navbar
-      window.dispatchEvent(new Event('loginStatusChanged'));
-      
-      // Navigate to dashboard on success
+      dispatch(login(email));
       navigate('/dashboard');
     } catch (error) {
       console.error('Login error:', error);
@@ -63,7 +60,7 @@ const LoginPage = () => {
         )}
         
         <form onSubmit={handleSubmit} className="space-y-4">
-          {/* Email */}
+       
           <div>
             <label htmlFor="email" className="block text-sm font-medium text-gray-400">
               Email
@@ -79,7 +76,7 @@ const LoginPage = () => {
             />
           </div>
 
-          {/* Password */}
+         
           <div>
             <label htmlFor="password" className="block text-sm font-medium text-gray-400">
               Password
@@ -106,12 +103,10 @@ const LoginPage = () => {
           </button>
         </form>
 
-        {/* Forgot Password + Signup */}
+        
         <div className="mt-4 text-center text-sm text-gray-600">
-          <a href="#" className="text-indigo-500 hover:underline">
-            Forgot your password?
-          </a>
-          <span className="mx-2">•</span>
+          
+          <span className="mx-2">OR</span>
           <Link to="/signup" className="text-indigo-500 hover:underline">
             Create an account
           </Link>

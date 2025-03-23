@@ -1,46 +1,21 @@
 import { Link, useNavigate } from 'react-router-dom'
 import { useState, useEffect } from 'react'
+import { useSelector, useDispatch } from 'react-redux'
+import {logout } from '../../redux/slices/AuthSlice'
 
 const Navbar = () => {
-  const [isLoggedIn, setIsLoggedIn] = useState(false)
+
   const [showDropdown, setShowDropdown] = useState(false)
-  const [userEmail, setUserEmail] = useState('')
   const navigate = useNavigate()
+  const dispatch = useDispatch()
+  const { isLoggedIn, userEmail } = useSelector((state) => state.auth)
 
-  // Check if user is logged in
-  useEffect(() => {
-    const checkLoginStatus = () => {
-      const loggedInStatus = localStorage.getItem('isLoggedIn')
-      const email = localStorage.getItem('userEmail')
-      setIsLoggedIn(loggedInStatus === 'true')
-      setUserEmail(email || '')
-    }
-
-    // Check initially
-    checkLoginStatus()
-
-    // Add event listener for storage changes
-    window.addEventListener('storage', checkLoginStatus)
-    
-    // Custom event listener for login status changes
-    window.addEventListener('loginStatusChanged', checkLoginStatus)
-
-    return () => {
-      window.removeEventListener('storage', checkLoginStatus)
-      window.removeEventListener('loginStatusChanged', checkLoginStatus)
-    }
-  }, [])
-
-  // Handle logout
   const handleLogout = () => {
-    localStorage.removeItem('isLoggedIn')
-    localStorage.removeItem('userEmail')
-    setIsLoggedIn(false)
+    dispatch(logout())
     setShowDropdown(false)
     navigate('/')
   }
 
-  // Get user initials for avatar
   const getUserInitials = () => {
     if (!userEmail) return 'U'
     return userEmail.split('@')[0].substring(0, 2).toUpperCase()

@@ -5,7 +5,9 @@ import Home from './routes/Home'
 import Dashboard from './routes/Dashboard'
 import Generator from './routes/Generator'
 import LoginPage from './routes/Login'
-import SignupPage from './routes/Signup'
+import SignupPage from './routes/SignUp'
+import { Provider } from 'react-redux'
+import { store } from './redux/store'
 const Layout = ({ children }) => {
   const location = useLocation()
   const isGeneratorPage = location.pathname === '/generator'
@@ -23,17 +25,19 @@ const Layout = ({ children }) => {
 
 function App() {
   return (
-    <Router>
-      <Layout>
-        <Routes>
-          <Route path="/" element={<Home />} />
-          <Route path="/dashboard" element={<Dashboard />} />
-          <Route path="/generator" element={<Generator />} />
-          <Route path="/login" element={<LoginPage />} />
+    <Provider store={store}>
+      <Router>
+        <Layout>
+          <Routes>
+            <Route path="/" element={<Home />} />
+            <Route path="/dashboard" element={<Dashboard />} />
+            <Route path="/generator" element={<Generator />} />
+            <Route path="/login" element={<LoginPage />} />
           <Route path="/signup" element={<SignupPage />} />
-        </Routes>
-      </Layout>
-    </Router>
+          </Routes>
+        </Layout>
+      </Router>
+    </Provider>
   )
 }
 

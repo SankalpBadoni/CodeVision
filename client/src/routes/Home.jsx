@@ -2,14 +2,20 @@ import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { motion } from "framer-motion";
 import { TextRevealCardTitle } from '../components/TitleCard';
+import { useSelector, useDispatch } from 'react-redux'
 
 
 const Home = () => {
   const [prompt, setPrompt] = useState('')
   const [isLoading, setIsLoading] = useState(false)
   const navigate = useNavigate()
+  const {isLoggedIn} = useSelector((state) => state.auth)
 
   const handleGenerate = async () => {
+    if(!isLoggedIn){
+      navigate('/login')
+      return
+    }
     try {
       setIsLoading(true);
       const response = await fetch('http://localhost:4000/api/generate', {
