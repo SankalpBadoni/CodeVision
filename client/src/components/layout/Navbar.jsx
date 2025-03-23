@@ -1,21 +1,49 @@
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import { useState, useEffect } from 'react'
 
 const Navbar = () => {
   const [isLoggedIn, setIsLoggedIn] = useState(false)
   const [showDropdown, setShowDropdown] = useState(false)
+  const [userEmail, setUserEmail] = useState('')
+  const navigate = useNavigate()
 
-  // Check if user is logged in (dummy implementation)
+  // Check if user is logged in
   useEffect(() => {
-    const loggedInStatus = localStorage.getItem('isLoggedIn')
-    setIsLoggedIn(loggedInStatus === 'true')
+    const checkLoginStatus = () => {
+      const loggedInStatus = localStorage.getItem('isLoggedIn')
+      const email = localStorage.getItem('userEmail')
+      setIsLoggedIn(loggedInStatus === 'true')
+      setUserEmail(email || '')
+    }
+
+    // Check initially
+    checkLoginStatus()
+
+    // Add event listener for storage changes
+    window.addEventListener('storage', checkLoginStatus)
+    
+    // Custom event listener for login status changes
+    window.addEventListener('loginStatusChanged', checkLoginStatus)
+
+    return () => {
+      window.removeEventListener('storage', checkLoginStatus)
+      window.removeEventListener('loginStatusChanged', checkLoginStatus)
+    }
   }, [])
 
   // Handle logout
   const handleLogout = () => {
     localStorage.removeItem('isLoggedIn')
+    localStorage.removeItem('userEmail')
     setIsLoggedIn(false)
     setShowDropdown(false)
+    navigate('/')
+  }
+
+  // Get user initials for avatar
+  const getUserInitials = () => {
+    if (!userEmail) return 'U'
+    return userEmail.split('@')[0].substring(0, 2).toUpperCase()
   }
 
   return (
@@ -34,9 +62,9 @@ const Navbar = () => {
                   className="flex items-center gap-2 text-white hover:text-indigo-400 transition"
                 >
                   <div className="w-8 h-8 rounded-full bg-indigo-600 flex items-center justify-center">
-                    <span className="text-sm font-semibold">JD</span>
+                    <span className="text-sm font-semibold">{getUserInitials()}</span>
                   </div>
-                  <span>John Doe</span>
+                  <span>{userEmail}</span>
                   <svg className={`w-4 h-4 transition-transform ${showDropdown ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
                   </svg>

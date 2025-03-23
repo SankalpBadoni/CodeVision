@@ -1,31 +1,51 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import axios from 'axios';
 
 const LoginPage = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    
+    setError('');
+    setIsLoading(true);
+
     // Simple validation
     if (!email || !password) {
       setError('Please fill in all fields');
+      setIsLoading(false);
       return;
     }
-    
-    // Dummy login logic - in a real app, this would call an API
-    if (email === 'user@example.com' && password === 'password') {
-      // Set login status in localStorage
+
+    try {
+      const response = await axios.post('http://localhost:4000/api/auth/login', {
+        email,
+        password,
+      }, {
+        withCredentials: true,
+      });
+
+      
       localStorage.setItem('isLoggedIn', 'true');
       localStorage.setItem('userEmail', email);
       
-      // Redirect to dashboard
+      // Dispatch login event to update navbar
+      window.dispatchEvent(new Event('loginStatusChanged'));
+      
+      // Navigate to dashboard on success
       navigate('/dashboard');
-    } else {
-      setError('Invalid credentials. Try user@example.com / password');
+    } catch (error) {
+      console.error('Login error:', error);
+      setError(
+        error.response?.data?.message || 
+        'Unable to login. Please check your credentials and try again.'
+      );
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -75,17 +95,14 @@ const LoginPage = () => {
             />
           </div>
 
-          {/* Login Instructions */}
-          <div className="text-xs text-gray-500 italic">
-            Use email: user@example.com and password: password
-          </div>
-
-          {/* Submit Button */}
           <button
             type="submit"
-            className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-medium py-2 rounded-lg transition duration-200"
+            disabled={isLoading}
+            className={`w-full bg-indigo-600 hover:bg-indigo-700 text-white font-medium py-2 rounded-lg transition duration-200 ${
+              isLoading ? 'opacity-50 cursor-not-allowed' : ''
+            }`}
           >
-            Sign In
+            {isLoading ? 'Signing in...' : 'Sign In'}
           </button>
         </form>
 
