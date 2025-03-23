@@ -12,7 +12,7 @@ const Home = () => {
   const handleGenerate = async () => {
     try {
       setIsLoading(true);
-      const response = await fetch('http://localhost:5000/api/generate', {
+      const response = await fetch('http://localhost:4000/api/generate', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
