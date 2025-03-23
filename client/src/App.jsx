@@ -9,6 +9,7 @@ import SignupPage from './routes/SignUp'
 import { Provider } from 'react-redux'
 import { store } from './redux/store'
 import ProtectedRoute from './components/layout/ProtectedRoute'
+import Profile from './routes/Profile'
 const Layout = ({ children }) => {
   const location = useLocation()
   const isGeneratorPage = location.pathname === '/generator'
@@ -39,6 +40,11 @@ function App() {
             } />
             <Route path="/login" element={<LoginPage />} />
           <Route path="/signup" element={<SignupPage />} />
+          <Route path="/profile" element={
+            <ProtectedRoute>
+              <Profile />
+            </ProtectedRoute>
+          } />
           </Routes>
         </Layout>
       </Router>
