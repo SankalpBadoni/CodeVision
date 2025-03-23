@@ -8,6 +8,7 @@ import LoginPage from './routes/Login'
 import SignupPage from './routes/SignUp'
 import { Provider } from 'react-redux'
 import { store } from './redux/store'
+import ProtectedRoute from './components/layout/ProtectedRoute'
 const Layout = ({ children }) => {
   const location = useLocation()
   const isGeneratorPage = location.pathname === '/generator'
@@ -31,7 +32,11 @@ function App() {
           <Routes>
             <Route path="/" element={<Home />} />
             <Route path="/dashboard" element={<Dashboard />} />
-            <Route path="/generator" element={<Generator />} />
+            <Route path="/generator" element={
+              <ProtectedRoute>
+                <Generator />
+              </ProtectedRoute>
+            } />
             <Route path="/login" element={<LoginPage />} />
           <Route path="/signup" element={<SignupPage />} />
           </Routes>

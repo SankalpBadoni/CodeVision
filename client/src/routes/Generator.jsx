@@ -9,7 +9,7 @@ const Generator = () => {
   const [prompt, setPrompt] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [files, setFiles] = useState(() => {
-    // Initialize files from localStorage or use empty state
+    
     const savedFiles = localStorage.getItem("generatedFiles");
     return savedFiles
       ? JSON.parse(savedFiles)
