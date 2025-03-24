@@ -1,66 +1,25 @@
 import { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import { useSelector } from 'react-redux';
 
 const Dashboard = () => {
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const {isLoggedIn} = useSelector((state) => state.auth)
   const [projects, setProjects] = useState([]);
   const navigate = useNavigate();
 
-  // Check login status
   useEffect(() => {
-    const loggedInStatus = localStorage.getItem('isLoggedIn');
-    if (loggedInStatus !== 'true') {
-      navigate('/login');
-    } else {
-      setIsLoggedIn(true);
-      // Load projects from localStorage
-      loadProjects();
+    if(!isLoggedIn){
+      navigate('/login')
+      return
     }
-  }, [navigate]);
+    loadProjects()
+  }, [ isLoggedIn]);
 
   // Load projects from localStorage
   const loadProjects = () => {
-    // Get existing projects or create dummy ones if none exist
     const savedProjects = localStorage.getItem('userProjects');
     if (savedProjects) {
       setProjects(JSON.parse(savedProjects));
-    } else {
-      // Create dummy projects for demo
-      const dummyProjects = [
-        {
-          id: '1',
-          name: 'E-commerce Website',
-          description: 'Online store with product listings and shopping cart',
-          date: '2023-11-20',
-          messages: [
-            { role: 'user', content: 'Create an e-commerce website with modern design' },
-            { role: 'ai', content: 'I have generated an e-commerce website with product listings and shopping cart functionality.' }
-          ],
-          files: {
-            'index.html': '<html><head><title>E-commerce Store</title></head><body><h1>Welcome to our store!</h1></body></html>',
-            'styles.css': 'body { font-family: Arial; }',
-            'script.js': 'console.log("E-commerce site loaded");'
-          }
-        },
-        {
-          id: '2',
-          name: 'Portfolio Site',
-          description: 'Professional portfolio to showcase work',
-          date: '2023-11-25',
-          messages: [
-            { role: 'user', content: 'Build a portfolio website for a graphic designer' },
-            { role: 'ai', content: 'I have created a portfolio site with project showcase and contact form.' }
-          ],
-          files: {
-            'index.html': '<html><head><title>Designer Portfolio</title></head><body><h1>My Portfolio</h1></body></html>',
-            'styles.css': 'body { background: #f5f5f5; }',
-            'script.js': 'console.log("Portfolio loaded");'
-          }
-        }
-      ];
-      
-      setProjects(dummyProjects);
-      localStorage.setItem('userProjects', JSON.stringify(dummyProjects));
     }
   };
 
@@ -97,19 +56,111 @@ const Dashboard = () => {
           </button>
         </div>
         
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {projects.map(project => (
-            <ProjectCard 
-              key={project.id} 
-              project={project} 
-              onContinue={() => continueProject(project)} 
-            />
-          ))}
-        </div>
+        {projects.length === 0 ? (
+          <div className="flex flex-col items-center justify-center py-32 text-center">
+            <div className="relative">
+              {/* Background gradient effect */}
+              <div className="absolute inset-0 -z-10 transform-gpu overflow-hidden blur-3xl" aria-hidden="true">
+                <div className="relative aspect-[1200/800] w-[72.1875rem] opacity-20"
+                  style={{
+                    background: 'radial-gradient(circle at 50% 50%, rgb(99 102 241 / 0.2), transparent 80%)',
+                  }}
+                />
+              </div>
+              
+              {/* Empty state content */}
+              <div className="w-24 h-24 mb-8 rounded-2xl bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center mx-auto">
+                <svg className="w-12 h-12 text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} 
+                    d="M12 9v6m3-3H9m12 0a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+              </div>
+              <h3 className="text-2xl font-semibold mb-4 bg-gradient-to-r from-indigo-400 to-blue-500 text-transparent bg-clip-text">
+                Create Your First Project
+              </h3>
+              <p className="text-gray-400 mb-8 max-w-md mx-auto">
+                Get started by creating a new project. Use AI to generate your website and manage all your projects in one place.
+              </p>
+              <button
+                onClick={createNewProject}
+                className="px-6 py-3 rounded-lg bg-gradient-to-r from-indigo-600 to-blue-500 
+                  hover:from-indigo-700 hover:to-blue-600 text-white transition-all duration-300 
+                  shadow-lg hover:shadow-xl hover:scale-[1.02] flex items-center gap-2 mx-auto"
+              >
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} 
+                    d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                </svg>
+                Start Creating
+              </button>
+              
+              {/* Feature highlights */}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-16 max-w-4xl mx-auto">
+                <FeatureCard 
+                  icon={<AIIcon />}
+                  title="AI-Powered"
+                  description="Generate complete websites using advanced AI technology"
+                />
+                <FeatureCard 
+                  icon={<CustomizeIcon />}
+                  title="Customizable"
+                  description="Edit and customize your generated code in real-time"
+                />
+                <FeatureCard 
+                  icon={<SaveIcon />}
+                  title="Auto-Saving"
+                  description="Your projects are automatically saved and organized"
+                />
+              </div>
+            </div>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {projects.map(project => (
+              <ProjectCard 
+                key={project.id} 
+                project={project} 
+                onContinue={() => continueProject(project)} 
+              />
+            ))}
+          </div>
+        )}
       </div>
     </div>
   );
 };
+
+const FeatureCard = ({ icon, title, description }) => (
+  <div className="p-6 rounded-lg bg-gray-800/30 border border-gray-700 hover:border-indigo-500/30 transition-all duration-300">
+    <div className="w-12 h-12 rounded-lg bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center mb-4">
+      {icon}
+    </div>
+    <h4 className="text-lg font-semibold mb-2 text-gray-200">{title}</h4>
+    <p className="text-gray-400 text-sm">{description}</p>
+  </div>
+);
+
+// Icons
+const AIIcon = () => (
+  <svg className="w-6 h-6 text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} 
+      d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+  </svg>
+);
+
+const CustomizeIcon = () => (
+  <svg className="w-6 h-6 text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} 
+      d="M11 4a2 2 0 114 0v1a1 1 0 001 1h3a1 1 0 011 1v3a1 1 0 01-1 1h-1a2 2 0 100 4h1a1 1 0 011 1v3a1 1 0 01-1 1h-3a1 1 0 01-1-1v-1a2 2 0 10-4 0v1a1 1 0 01-1 1H7a1 1 0 01-1-1v-3a1 1 0 00-1-1H4a2 2 0 110-4h1a1 1 0 001-1V7a1 1 0 011-1h3a1 1 0 001-1V4z" />
+  </svg>
+);
+
+const SaveIcon = () => (
+  <svg className="w-6 h-6 text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} 
+      d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4" />
+  </svg>
+);
 
 const ProjectCard = ({ project, onContinue }) => {
   const formatDate = (dateString) => {
