@@ -8,7 +8,7 @@ const Navbar = () => {
   const [showDropdown, setShowDropdown] = useState(false)
   const navigate = useNavigate()
   const dispatch = useDispatch()
-  const { isLoggedIn, userEmail } = useSelector((state) => state.auth)
+  const { isLoggedIn, userEmail, username } = useSelector((state) => state.auth)
 
   const handleLogout = () => {
     dispatch(logout())
@@ -17,7 +17,8 @@ const Navbar = () => {
   }
 
   const getUserInitials = () => {
-    if (!userEmail) return 'U'
+    if (!username && !userEmail) return 'U'
+    if (username) return username.substring(0, 2).toUpperCase()
     return userEmail.split('@')[0].substring(0, 2).toUpperCase()
   }
 
