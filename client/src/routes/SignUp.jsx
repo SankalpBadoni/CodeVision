@@ -1,6 +1,8 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import axios from 'axios';
+import { useDispatch } from 'react-redux';
+import { login } from '../redux/slices/AuthSlice';
 
 const SignUpPage = () => {
   const [email, setEmail] = useState('');
@@ -10,6 +12,7 @@ const SignUpPage = () => {
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
+  const dispatch = useDispatch();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -55,12 +58,8 @@ const SignUpPage = () => {
         return;
       }
 
-      // Set login status and user info in localStorage
-      localStorage.setItem('isLoggedIn', 'true');
-      localStorage.setItem('userEmail', email);
-      
-      // Dispatch login event to update navbar
-      window.dispatchEvent(new Event('loginStatusChanged'));
+      // Instead of using localStorage directly, use Redux
+      dispatch(login({ email, username }));
       
       // Navigate to dashboard on success
       navigate('/dashboard');

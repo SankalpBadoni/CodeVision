@@ -33,7 +33,10 @@ const LoginPage = () => {
       });
 
       
-      dispatch(login(email));
+      dispatch(login({ 
+        email,
+        username: response.data?.user?.username || email.split('@')[0]
+      }));
       navigate('/dashboard');
     } catch (error) {
       console.error('Login error:', error);
