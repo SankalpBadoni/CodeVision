@@ -4,6 +4,8 @@ import { Link, useNavigate } from "react-router-dom";
 import { Clipboard } from "lucide-react";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
+import { useSelector, useDispatch } from 'react-redux';
+import { createProject, updateProject, fetchProjectById } from '../redux/slices/ProjectSlice.js';
 
 const Generator = () => {
   const [prompt, setPrompt] = useState("");
@@ -21,7 +23,7 @@ const Generator = () => {
   });
   const [selectedFile, setSelectedFile] = useState("index.html");
   const [messages, setMessages] = useState(() => {
-    // Initialize messages from localStorage or use default
+    
     const savedMessages = localStorage.getItem("chatMessages");
     return savedMessages
       ? JSON.parse(savedMessages)
@@ -37,15 +39,18 @@ const Generator = () => {
     return localStorage.getItem("currentProjectId") || null;
   });
   const navigate = useNavigate();
+  const { isLoggedIn } = useSelector((state) => state.auth);
+  const { currentProject } = useSelector((state) => state.projects);
+  const dispatch = useDispatch();
 
-  // Copy file to clipboard
+  
   const copyFile = () => {
     const fileContent = files[selectedFile];
     navigator.clipboard.writeText(fileContent);
     toast.success("File copied to clipboard");
   };
   
-  // Load files from localStorage when component mounts
+  
   useEffect(() => {
     const savedFiles = localStorage.getItem("generatedFiles");
     if (savedFiles) {
@@ -53,78 +58,166 @@ const Generator = () => {
     }
   }, []);
 
-  // Save files to localStorage whenever they change
+  
   useEffect(() => {
     localStorage.setItem("generatedFiles", JSON.stringify(files));
     
-    // Also save to current project if it exists
-    if (currentProjectId) {
-      saveProjectData();
+    
+    if (currentProjectId && Object.keys(files).length > 0) {
+      const timeoutId = setTimeout(() => {
+        saveProjectData(false); 
+      }, 2000);
+      
+      return () => clearTimeout(timeoutId);
     }
   }, [files]);
 
-  // Save messages to localStorage whenever they change
+  
   useEffect(() => {
     localStorage.setItem("chatMessages", JSON.stringify(messages));
     
-    // Also save to current project if it exists
-    if (currentProjectId) {
-      saveProjectData();
+    
+    if (currentProjectId && messages.length > 0) {
+      const timeoutId = setTimeout(() => {
+        saveProjectData(false); 
+      }, 2000);
+      
+      return () => clearTimeout(timeoutId);
     }
   }, [messages]);
 
-  // Function to save current project data
-  const saveProjectData = () => {
-    const projects = JSON.parse(localStorage.getItem("userProjects") || "[]");
-    const projectIndex = projects.findIndex(p => p.id === currentProjectId);
+  
+  useEffect(() => {
     
-    if (projectIndex !== -1) {
-      // Update existing project
-      projects[projectIndex].files = files;
-      projects[projectIndex].messages = messages;
-      localStorage.setItem("userProjects", JSON.stringify(projects));
-    } else if (currentProjectId) {
-      // Create new project with generated ID
+    let isMounted = true;
+
+    const loadProjectData = async () => {
+      const projectId = localStorage.getItem("currentProjectId");
+      if (!projectId || !isLoggedIn) return;
+      if (currentProject && currentProject._id === projectId) {
+        setFiles(currentProject.files);
+        setMessages(currentProject.messages || []);
+        setCurrentProjectId(currentProject._id);
+        return;
+      }
+      
+      try {
+        const project = await dispatch(fetchProjectById(projectId)).unwrap();
+        
+       
+        if (!isMounted) return;
+        
+        setFiles(project.files);
+        setMessages(project.messages || []);
+        setCurrentProjectId(project._id);
+      } catch (error) {
+        console.error("Error loading project:", error);
+        if (isMounted) {
+          toast.error("Failed to load project data");
+        }
+      }
+    };
+    
+    loadProjectData();
+    
+  
+    return () => {
+      isMounted = false;
+    };
+    
+   
+  }, [isLoggedIn]);
+
+  
+  const saveProjectData = async (showToast = true) => {
+    if (!isLoggedIn) {
+      if (showToast) {
+        toast.error("You must be logged in to save projects");
+      }
+      return;
+    }
+
+    try {
+      if (currentProjectId) {
+        
+        const updateData = {
+          files,
+          messages,
+          lastModified: new Date()
+        };
+        
+        await dispatch(updateProject({ 
+          projectId: currentProjectId, 
+          updateData
+        })).unwrap();
+        
+        if (showToast) {
+          toast.success("Project updated successfully!");
+        }
+      } else {
+        
+        const projects = JSON.parse(localStorage.getItem("userProjects") || "[]");
+        const projectIndex = projects.findIndex(p => p.id === currentProjectId);
+        
+        if (projectIndex !== -1) {
+          projects[projectIndex].files = files;
+          projects[projectIndex].messages = messages;
+          localStorage.setItem("userProjects", JSON.stringify(projects));
+        }
+      }
+    } catch (error) {
+      if (showToast) {
+        toast.error(`Failed to save project: ${error.message || 'Unknown error'}`);
+      }
+      console.error("Save project error:", error);
+    }
+  };
+
+ 
+  const saveAsNewProject = async () => {
+    if (!isLoggedIn) {
+      toast.error("You must be logged in to save projects");
+      return;
+    }
+
+    const projectName = prompt("Enter a name for your project:", `Project ${new Date().toLocaleDateString()}`);
+    
+    if (!projectName) return; 
+    
+    try {
+      const projectData = {
+        name: projectName,
+        description: "Generated website",
+        files,
+        messages
+      };
+      
+      const result = await dispatch(createProject(projectData)).unwrap();
+      setCurrentProjectId(result._id);
+      localStorage.setItem("currentProjectId", result._id);
+      
+      toast.success("Project saved successfully!");
+      
+      
+      const projects = JSON.parse(localStorage.getItem("userProjects") || "[]");
       const newProject = {
-        id: currentProjectId,
-        name: `Project ${new Date().toLocaleDateString()}`,
+        id: result._id,
+        name: projectName,
         description: "Generated website",
         date: new Date().toISOString(),
-        files: files,
-        messages: messages
+        files,
+        messages
       };
       
       projects.push(newProject);
       localStorage.setItem("userProjects", JSON.stringify(projects));
+    } catch (error) {
+      toast.error(`Failed to save project: ${error.message || 'Unknown error'}`);
+      console.error("Save project error:", error);
     }
   };
 
-  // Save as new project
-  const saveAsNewProject = () => {
-    const projects = JSON.parse(localStorage.getItem("userProjects") || "[]");
-    const projectName = prompt("Enter a name for your project:");
-    
-    if (!projectName) return;
-    
-    const newProjectId = Date.now().toString();
-    const newProject = {
-      id: newProjectId,
-      name: projectName,
-      description: "Custom website project",
-      date: new Date().toISOString(),
-      files: files,
-      messages: messages
-    };
-    
-    projects.push(newProject);
-    localStorage.setItem("userProjects", JSON.stringify(projects));
-    localStorage.setItem("currentProjectId", newProjectId);
-    setCurrentProjectId(newProjectId);
-    
-    toast.success("Project saved successfully!");
-  };
-
-  // Go to dashboard
+  
   const goToDashboard = () => {
     navigate("/dashboard");
   };
@@ -148,10 +241,10 @@ const Generator = () => {
       const data = await response.json();
 
       if (data.success) {
-        // Update files
+        
         setFiles(data.files);
         
-        // Add AI response to chat
+        
         setMessages((prev) => [
           ...prev,
           {
@@ -161,7 +254,7 @@ const Generator = () => {
           },
         ]);
         
-        // If this is a new generation (not from a project), create a project ID
+        
         if (!currentProjectId) {
           const newProjectId = Date.now().toString();
           localStorage.setItem("currentProjectId", newProjectId);

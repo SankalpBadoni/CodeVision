@@ -3,45 +3,75 @@ import { useNavigate } from 'react-router-dom'
 import { motion } from "framer-motion";
 import { TextRevealCardTitle } from '../components/TitleCard';
 import { useSelector, useDispatch } from 'react-redux'
+import { createProject } from '../redux/slices/ProjectSlice';
+import api from '../utils/api';
 
 
 const Home = () => {
   const [prompt, setPrompt] = useState('')
   const [isLoading, setIsLoading] = useState(false)
   const navigate = useNavigate()
+  const dispatch = useDispatch()
   const {isLoggedIn} = useSelector((state) => state.auth)
 
   const handleGenerate = async () => {
-    if(!isLoggedIn){
+    if (!isLoggedIn) {
       navigate('/login')
       return
     }
     try {
       setIsLoading(true);
-      const response = await fetch('http://localhost:4000/api/generate', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ prompt }),
+      const response = await api.post('/generate', {
+        prompt,
       });
 
-      const data = await response.json();
+      const data = response.data;
       
       if (data.success) {
-        // Clear previous project data to start fresh
+        
         localStorage.removeItem('chatMessages');
         localStorage.removeItem('currentProjectId');
         
-        // Save new generated files
+        
         localStorage.setItem('generatedFiles', JSON.stringify(data.files));
-        navigate('/generator');
+        
+       
+        const initialMessages = [{ role: 'user', content: prompt }];
+        localStorage.setItem('chatMessages', JSON.stringify(initialMessages));
+        
+        try {
+         
+          const projectData = {
+            name: `Project ${new Date().toLocaleDateString()}`,
+            description: prompt,
+            files: data.files,
+            messages: initialMessages
+          };
+          
+          const result = await dispatch(createProject(projectData)).unwrap();
+          
+          
+          localStorage.setItem('currentProjectId', result._id);
+          
+          console.log('Project saved automatically:', result.name);
+          
+         
+          setTimeout(() => {
+            
+            navigate('/generator');
+          }, 300);
+          
+        } catch (projectError) {
+          console.error('Failed to save project:', projectError);
+          
+          navigate('/generator');
+        }
       } else {
         throw new Error(data.error || 'Failed to generate code');
       }
     } catch (error) {
       console.error('Error:', error);
-      // Add a visual error message
+     
       alert(error.message || 'An error occurred while generating the code. Please try again.');
     } finally {
       setIsLoading(false);
