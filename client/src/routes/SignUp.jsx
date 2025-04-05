@@ -1,88 +1,80 @@
-import { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
-import axios from 'axios';
-import { useDispatch } from 'react-redux';
-import { login } from '../redux/slices/AuthSlice';
+import { useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
+import { useDispatch } from "react-redux";
+import { login } from "../redux/slices/AuthSlice";
+import api from "../utils/api";
 
 const SignUpPage = () => {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
-  const [username, setUsername] = useState('');
-  const [error, setError] = useState('');
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [username, setUsername] = useState("");
+  const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
   const dispatch = useDispatch();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setError('');
+    setError("");
     setIsLoading(true);
 
-    // Validation
     if (!email || !password || !username || !confirmPassword) {
-      setError('Please fill in all fields');
+      setError("Please fill in all fields");
       setIsLoading(false);
       return;
     }
 
     if (password !== confirmPassword) {
-      setError('Passwords do not match');
+      setError("Passwords do not match");
       setIsLoading(false);
       return;
     }
 
     if (password.length < 6) {
-      setError('Password must be at least 6 characters long');
+      setError("Password must be at least 6 characters long");
       setIsLoading(false);
       return;
     }
 
     try {
-      const response = await axios.post('http://localhost:4000/api/auth/register', {
+      const registerResponse = await api.post("/auth/register", {
         email,
         password,
-        username
-      }, {
-        withCredentials: true,
-        headers: {
-          'Content-Type': 'application/json',
-          'Accept': 'application/json'
-        }
+        username,
       });
 
-      
-
-      if (response.data.success === false) {
-        setError(response.data.message || 'Registration failed');
+      if (registerResponse.data.success === false) {
+        setError(registerResponse.data.message || "Registration failed");
+        setIsLoading(false);
         return;
       }
 
-      // Instead of using localStorage directly, use Redux
-      dispatch(login({ email, username }));
-      
-      // Navigate to dashboard on success
-      navigate('/dashboard');
-    } catch (error) {
-      console.error('Full registration error:', error);
-      
-      if (error.response) {
-        // The request was made and the server responded with a status code
-        // that falls out of the range of 2xx
-        console.error('Error response data:', error.response.data);
-        console.error('Error response status:', error.response.status);
-        console.error('Error response headers:', error.response.headers);
-        
-        setError(error.response.data.message || 'Server error: ' + error.response.status);
-      } else if (error.request) {
-        // The request was made but no response was received
-        console.error('Error request:', error.request);
-        setError('No response from server. Please check your connection.');
+      const loginResponse = await api.post("/auth/login", {
+        email,
+        password,
+      });
+
+      if (loginResponse.data.success) {
+        localStorage.setItem("authToken", loginResponse.data.token);
+        dispatch(
+          login({
+            email: loginResponse.data.user.email,
+            username: loginResponse.data.user.username,
+          })
+        );
+
+        navigate("/dashboard");
       } else {
-        // Something happened in setting up the request that triggered an Error
-        console.error('Error message:', error.message);
-        setError('Request failed: ' + error.message);
+        setError("Account created! Please log in manually.");
+        navigate("/login");
       }
+    } catch (error) {
+      console.error("Registration error:", error);
+      setError(
+        error.response?.data?.message ||
+          "Registration failed. Please try again."
+      );
     } finally {
       setIsLoading(false);
     }
@@ -104,23 +96,28 @@ const SignUpPage = () => {
         <form onSubmit={handleSubmit} className="space-y-4">
           {/* Username */}
           <div>
-            <label htmlFor="username" className="block text-sm font-medium text-gray-400">
+            <label
+              htmlFor="username"
+              className="block text-sm font-medium text-gray-400"
+            >
               Username
             </label>
-            <input 
-              type="text" 
-              id="username" 
-              value={username} 
-              onChange={(e) => setUsername(e.target.value)} 
-              className="mt-1 w-full px-4 py-2 border border-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 text-gray-200 bg-gray-800/50" 
-              placeholder="Enter your username" 
-              required 
+            <input
+              type="text"
+              id="username"
+              value={username}
+              onChange={(e) => setUsername(e.target.value)}
+              className="mt-1 w-full px-4 py-2 border border-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 text-gray-200 bg-gray-800/50"
+              placeholder="Enter your username"
+              required
             />
           </div>
-        
-          {/* Email */}
+
           <div>
-            <label htmlFor="email" className="block text-sm font-medium text-gray-400">
+            <label
+              htmlFor="email"
+              className="block text-sm font-medium text-gray-400"
+            >
               Email
             </label>
             <input
@@ -134,9 +131,11 @@ const SignUpPage = () => {
             />
           </div>
 
-          {/* Password */}
           <div>
-            <label htmlFor="password" className="block text-sm font-medium text-gray-400">
+            <label
+              htmlFor="password"
+              className="block text-sm font-medium text-gray-400"
+            >
               Password
             </label>
             <input
@@ -150,9 +149,11 @@ const SignUpPage = () => {
             />
           </div>
 
-          {/* Confirm Password */}
           <div>
-            <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-400">
+            <label
+              htmlFor="confirmPassword"
+              className="block text-sm font-medium text-gray-400"
+            >
               Confirm Password
             </label>
             <input
@@ -166,21 +167,19 @@ const SignUpPage = () => {
             />
           </div>
 
-          {/* Submit Button */}
           <button
             type="submit"
             disabled={isLoading}
             className={`w-full bg-indigo-600 hover:bg-indigo-700 text-white font-medium py-2 rounded-lg transition duration-200 ${
-              isLoading ? 'opacity-50 cursor-not-allowed' : ''
+              isLoading ? "opacity-50 cursor-not-allowed" : ""
             }`}
           >
-            {isLoading ? 'Creating Account...' : 'Create Account'}
+            {isLoading ? "Creating Account..." : "Create Account"}
           </button>
         </form>
 
-        {/* Login Link */}
         <div className="mt-4 text-center text-sm text-gray-600">
-          Already have an account?{' '}
+          Already have an account?{" "}
           <Link to="/login" className="text-indigo-500 hover:underline">
             Log in
           </Link>

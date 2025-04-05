@@ -1,8 +1,8 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import axios from 'axios';
 import { useDispatch } from 'react-redux';
 import { login } from '../redux/slices/AuthSlice';
+import api from '../utils/api';
 
 const LoginPage = () => {
   const [email, setEmail] = useState('');
@@ -17,7 +17,6 @@ const LoginPage = () => {
     setError('');
     setIsLoading(true);
 
-   
     if (!email || !password) {
       setError('Please fill in all fields');
       setIsLoading(false);
@@ -25,19 +24,23 @@ const LoginPage = () => {
     }
 
     try {
-      const response = await axios.post('http://localhost:4000/api/auth/login', {
+      const response = await api.post('/auth/login', {
         email,
         password,
-      }, {
-        withCredentials: true,
       });
 
-      
-      dispatch(login({ 
-        email,
-        username: response.data?.user?.username || email.split('@')[0]
-      }));
-      navigate('/dashboard');
+      if (response.data.success) {
+        localStorage.setItem('authToken', response.data.token);
+        
+        dispatch(login({ 
+          email: response.data.user.email,
+          username: response.data.user.username
+        }));
+        
+        navigate('/dashboard');
+      } else {
+        setError(response.data.message || 'Login failed');
+      }
     } catch (error) {
       console.error('Login error:', error);
       setError(
