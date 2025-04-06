@@ -1,43 +1,66 @@
-import { useEffect, useState } from 'react';
+import { useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { useSelector } from 'react-redux';
+import { useSelector, useDispatch } from 'react-redux';
+import { fetchUserProjects } from '../redux/slices/ProjectSlice.js';
+import { setCurrentProject } from '../redux/slices/ProjectSlice.js';
 
 const Dashboard = () => {
-  const {isLoggedIn} = useSelector((state) => state.auth)
-  const [projects, setProjects] = useState([]);
+  const { isLoggedIn } = useSelector((state) => state.auth);
+  const { projects, isLoading, error } = useSelector((state) => state.projects);
+  const dispatch = useDispatch();
   const navigate = useNavigate();
 
   useEffect(() => {
-    if(!isLoggedIn){
-      navigate('/login')
-      return
+    if (!isLoggedIn) {
+      navigate('/login');
+      return;
     }
-    loadProjects()
-  }, [ isLoggedIn]);
+    dispatch(fetchUserProjects());
+  }, [dispatch, isLoggedIn]);
 
-  // Load projects from localStorage
-  const loadProjects = () => {
-    const savedProjects = localStorage.getItem('userProjects');
-    if (savedProjects) {
-      setProjects(JSON.parse(savedProjects));
-    }
-  };
-
-  // Continue project - load files and navigate to generator
   const continueProject = (project) => {
+    dispatch(setCurrentProject(project));
+
     localStorage.setItem('generatedFiles', JSON.stringify(project.files));
     localStorage.setItem('chatMessages', JSON.stringify(project.messages));
-    localStorage.setItem('currentProjectId', project.id);
+    localStorage.setItem('currentProjectId', project._id); // Using MongoDB _id now
+    
     navigate('/generator');
   };
 
-  // Create new project
   const createNewProject = () => {
     navigate('/');
   };
 
   if (!isLoggedIn) {
     return <div className="container mx-auto px-4 pt-24">Loading...</div>;
+  }
+
+  if (isLoading) {
+    return (
+      <div className="container mx-auto px-4 pt-24">
+        <div className="flex justify-center items-center h-64">
+          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-indigo-500"></div>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="container mx-auto px-4 pt-24">
+        <div className="bg-red-500/10 border border-red-500/30 rounded-lg p-4">
+          <h3 className="text-xl font-semibold text-red-400 mb-2">Error Loading Projects</h3>
+          <p className="text-gray-300">{error}</p>
+          <button 
+            onClick={() => dispatch(fetchUserProjects())}
+            className="mt-4 px-4 py-2 bg-red-500/20 hover:bg-red-500/30 text-red-400 rounded-lg transition"
+          >
+            Try Again
+          </button>
+        </div>
+      </div>
+    );
   }
 
   return (
@@ -118,7 +141,7 @@ const Dashboard = () => {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {projects.map(project => (
               <ProjectCard 
-                key={project.id} 
+                key={project._id} 
                 project={project} 
                 onContinue={() => continueProject(project)} 
               />
