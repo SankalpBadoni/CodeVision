@@ -20,10 +20,11 @@ const Dashboard = () => {
 
   const continueProject = (project) => {
     dispatch(setCurrentProject(project));
+    console.log("💬 Setting current project:", project);
 
     localStorage.setItem('generatedFiles', JSON.stringify(project.files));
     localStorage.setItem('chatMessages', JSON.stringify(project.messages));
-    localStorage.setItem('currentProjectId', project._id); // Using MongoDB _id now
+    localStorage.setItem('currentProjectId', project._id); 
     
     navigate('/generator');
   };
@@ -186,6 +187,7 @@ const SaveIcon = () => (
 );
 
 const ProjectCard = ({ project, onContinue }) => {
+  // console.log("💬 Project:", project);
   const formatDate = (dateString) => {
     const options = { year: 'numeric', month: 'short', day: 'numeric' };
     return new Date(dateString).toLocaleDateString(undefined, options);
