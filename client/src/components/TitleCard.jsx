@@ -2,7 +2,7 @@
 import React, { useEffect, useRef, useState, memo } from "react";
 import { motion } from "motion/react";
 import { twMerge } from "tailwind-merge";
-import {cn} from "../lib/utils.js"
+import { cn } from "../lib/utils";
 
 export const TextRevealCard = ({
   text,
@@ -53,7 +53,7 @@ export const TextRevealCard = ({
 
   const rotateDeg = (widthPercentage - 50) * 0.1;
   return (
-    (<div
+    <div
       onMouseEnter={mouseEnterHandler}
       onMouseLeave={mouseLeaveHandler}
       onMouseMove={mouseMoveHandler}
@@ -62,7 +62,7 @@ export const TextRevealCard = ({
       onTouchMove={touchMoveHandler}
       ref={cardRef}
       className={cn(
-        "bg-[#1d1c20] border border-white/[0.08] w-[40rem] rounded-lg p-8 relative overflow-hidden",
+        "bg-transparent border border-white/[0.08] w-[40rem] rounded-lg p-8 relative overflow-hidden",
         className
       )}>
       {children}
@@ -82,12 +82,12 @@ export const TextRevealCard = ({
                 }
           }
           transition={isMouseOver ? { duration: 0 } : { duration: 0.4 }}
-          className="absolute bg-[#1d1c20] z-20  will-change-transform">
+          className="absolute bg-gray-800 z-20  will-change-transform">
           <p
             style={{
               textShadow: "4px 4px 15px rgba(0,0,0,0.5)",
             }}
-            className="text-base sm:text-[3rem] py-10 font-bold text-white bg-clip-text  bg-gradient-to-b from-white to-neutral-300">
+            className="text-base sm:text-[3rem] py-10 font-bold text-indigo-400 bg-clip-text text-transparent bg-gradient-to-b from-white to-neutral-300">
             {revealText}
           </p>
         </motion.div>
@@ -109,7 +109,7 @@ export const TextRevealCard = ({
           <MemoizedStars />
         </div>
       </div>
-    </div>)
+    </div>
   );
 };
 
@@ -118,9 +118,9 @@ export const TextRevealCardTitle = ({
   className
 }) => {
   return (
-    (<h2 className={twMerge("text-white text-lg mb-2", className)}>
+    <h2 className={twMerge("text-white text-lg mb-2", className)}>
       {children}
-    </h2>)
+    </h2>
   );
 };
 
@@ -136,7 +136,7 @@ const Stars = () => {
   const randomOpacity = () => Math.random();
   const random = () => Math.random();
   return (
-    (<div className="absolute inset-0">
+    <div className="absolute inset-0">
       {[...Array(80)].map((_, i) => (
         <motion.span
           key={`star-${i}`}
@@ -163,7 +163,7 @@ const Stars = () => {
           }}
           className="inline-block"></motion.span>
       ))}
-    </div>)
+    </div>
   );
 };
 
