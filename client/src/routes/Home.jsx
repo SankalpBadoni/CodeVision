@@ -84,7 +84,7 @@ const Home = () => {
           <div className="absolute -bottom-40 -left-32 w-96 h-96 bg-blue-500/10 rounded-full blur-3xl"></div>
         </div>
 
-        <div className="space-y-8 mb-10">
+        <div className="space-y-8 mb-6">
           <div className="inline-block">
             <span className="px-4 py-2 rounded-full text-sm font-medium bg-indigo-500/10 text-indigo-400 border border-indigo-500/20">
               Powered by Advanced AI Technology
@@ -92,7 +92,7 @@ const Home = () => {
           </div>
           <div className="max-w-4xl mx-auto space-y-4">
             <motion.div
-              className="absolute top-10 left-0 w-full h-[35%] opacity-20"
+              className="absolute top-60 left-0 w-full h-[35%] opacity-20"
               animate={{
                 background: [
                   "radial-gradient(circle at 20% 20%, #3b82f6 0%, transparent 20%)",
@@ -106,14 +106,13 @@ const Home = () => {
             {/* <h1 className="text-3xl md:text-5xl font-bold bg-gradient-to-r from-indigo-400 via-blue-500 to-indigo-600 text-transparent bg-clip-text leading-tight">
               Transform Your Vision Into Reality
             </h1> */}
-            <div >
-      <TextRevealCard
-        text="You have the vision"
-        revealText="We have the code :) "
-      >
-      </TextRevealCard>
-    </div>
-
+            <div>
+              <TextRevealCard
+                text="You know the vision "
+                revealText="We master the code ;) "
+              ></TextRevealCard>
+            </div>
+            
             <p className="text-xl md:text-2xl text-gray-400 font-light max-w-2xl mx-auto leading-relaxed">
               Build sophisticated, production-ready websites in minutes with our
               <span className="text-blue-400 font-normal">
