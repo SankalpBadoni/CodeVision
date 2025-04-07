@@ -1,7 +1,11 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { TextRevealCardTitle } from "../components/TitleCard";
+import {
+  TextRevealCard,
+  TextRevealCardDescription,
+  TextRevealCardTitle,
+} from "../components/TitleCard";
 import { useSelector, useDispatch } from "react-redux";
 import { createProject } from "../redux/slices/ProjectSlice";
 import api from "../utils/api";
@@ -99,9 +103,16 @@ const Home = () => {
               }}
               transition={{ duration: 10, repeat: Infinity }}
             />
-            <h1 className="text-3xl md:text-5xl font-bold bg-gradient-to-r from-indigo-400 via-blue-500 to-indigo-600 text-transparent bg-clip-text leading-tight">
+            {/* <h1 className="text-3xl md:text-5xl font-bold bg-gradient-to-r from-indigo-400 via-blue-500 to-indigo-600 text-transparent bg-clip-text leading-tight">
               Transform Your Vision Into Reality
-            </h1>
+            </h1> */}
+            <div >
+      <TextRevealCard
+        text="You have the vision"
+        revealText="We have the code :) "
+      >
+      </TextRevealCard>
+    </div>
 
             <p className="text-xl md:text-2xl text-gray-400 font-light max-w-2xl mx-auto leading-relaxed">
               Build sophisticated, production-ready websites in minutes with our
