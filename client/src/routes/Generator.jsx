@@ -226,7 +226,7 @@ const Generator = () => {
     try {
       setIsLoading(true);
       setMessages((prev) => [...prev, { role: "user", content: prompt }]);
-
+  
       const response = await fetch("http://localhost:4000/api/generate", {
         method: "POST",
         headers: {
@@ -234,26 +234,43 @@ const Generator = () => {
         },
         body: JSON.stringify({ 
           prompt,
-          selectedFile 
+          selectedFile,
+          currentFiles: files
         }),
       });
-
+  
       const data = await response.json();
-
+  
       if (data.success) {
-        
-        setFiles(data.files);
-        
-        
-        setMessages((prev) => [
-          ...prev,
-          {
-            role: "ai",
-            content:
-              "I have generated the website based on your requirements. You can view and edit the files in the editor.",
-          },
-        ]);
-        
+        if (data.multiFileUpdate && data.updatedFiles) {
+          // Handle multi-file update
+          setFiles((prevFiles) => ({
+            ...prevFiles,
+            ...data.updatedFiles // Merge in all updated files
+          }));
+          
+          setMessages((prev) => [
+            ...prev,
+            {
+              role: "ai",
+              content: `I've updated the following files: ${data.updatedFilesList.join(', ')}`
+            },
+          ]);
+        } else {
+          // Handle single file update (backward compatibility)
+          setFiles((prevFiles) => ({
+            ...prevFiles,
+            [selectedFile]: data.fileContent
+          }));
+          
+          setMessages((prev) => [
+            ...prev,
+            {
+              role: "ai",
+              content: `I've updated the ${selectedFile} file based on your request.`
+            },
+          ]);
+        }
         
         if (!currentProjectId) {
           const newProjectId = Date.now().toString();
@@ -269,8 +286,7 @@ const Generator = () => {
         ...prev,
         {
           role: "ai",
-          content:
-            "Sorry, there was an error generating the code. Please try again.",
+          content: "Sorry, there was an error updating the code. Please try again."
         },
       ]);
     } finally {
