@@ -131,6 +131,14 @@ const Home = () => {
               placeholder="Describe your ideal website - from e-commerce platforms to professional portfolios..."
               className="w-full p-4 rounded-lg bg-gray-900/90 border-none focus:outline-none text-white placeholder-gray-400 text-lg"
               rows={4}
+              onKeyDown={(e) => {
+                if(e.key === "Enter" && !e.shiftKey) {
+                  e.preventDefault();
+                  if(prompt.trim()) {
+                    handleGenerate();
+                  }
+                }
+                }}
             />
           </div>
           <button
