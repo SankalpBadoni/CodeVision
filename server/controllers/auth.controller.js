@@ -59,25 +59,36 @@ export const login = async (req, res) => {
             });
         }
         const token = jwt.sign(
-            { userId: user._id, email: user.email },
+            { id: user._id, email: user.email },
             process.env.JWT_SECRET,
             { expiresIn: '24h' }
         );
         
+        // Set token in cookie
         res.cookie('access_token', token, {
             httpOnly: true,
-            
             maxAge: 24 * 60 * 60 * 1000,
+            sameSite: 'lax'
         });
+        
+        // Return user details and token
         res.status(200).json({
             success: true,
             message: "Login successful",
+            user: {
+                id: user._id,
+                email: user.email,
+                username: user.username
+            },
+            token // Include token in response for localStorage
         });
     }
     catch(error) {
+        console.error("Login error:", error);
         res.status(500).json({
             success: false,
             message: "Error in login",
+            error: error.message
         });
     }
 }
