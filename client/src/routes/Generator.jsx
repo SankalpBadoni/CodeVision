@@ -246,7 +246,7 @@ const Generator = () => {
           // Handle multi-file update
           setFiles((prevFiles) => ({
             ...prevFiles,
-            ...data.updatedFiles // Merge in all updated files
+            ...data.updatedFiles 
           }));
           
           setMessages((prev) => [
@@ -322,120 +322,158 @@ const Generator = () => {
       
       {/* Left Side - Chat */}
       <div className="w-1/3 border-r border-gray-800 bg-gray-900/50 flex flex-col h-screen">
-        {/* Chat header */}
-        <div className="p-4 border-b border-gray-800 bg-gray-900/90 backdrop-blur-sm flex items-center justify-between">
-          <Link to="/">
-            <h2 className="text-lg font-semibold bg-gradient-to-r from-indigo-400 to-blue-500 text-transparent bg-clip-text">
-              CodeVision
-            </h2>
-          </Link>
-          
-          <div className="flex space-x-3">
-            <button
-              onClick={saveAsNewProject}
-              className="text-xs px-3 py-1 bg-indigo-500/10 text-indigo-400 rounded-md hover:bg-indigo-500/20 transition-colors flex items-center gap-1"
-            >
-              <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4" />
-              </svg>
-              Save Project
-            </button>
+          <div className="p-4 border-b border-gray-800 bg-gray-900/90 backdrop-blur-sm flex items-center justify-between">
+            <Link to="/">
+              <h2 className="text-lg font-semibold bg-gradient-to-r from-indigo-400 to-blue-500 text-transparent bg-clip-text">
+                CodeVision
+              </h2>
+            </Link>
             
-            <button
-              onClick={goToDashboard}
-              className="text-xs px-3 py-1 bg-gray-700/20 text-gray-400 rounded-md hover:bg-gray-700/30 transition-colors flex items-center gap-1"
-            >
-              <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 10h16M4 14h16M4 18h16" />
-              </svg>
-              Projects
-            </button>
-          </div>
-        </div>
-
-        {/* Chat Messages - Add padding and better spacing */}
-        <div className="flex-1 p-6 overflow-y-auto space-y-6 scrollbar-thin scrollbar-thumb-gray-800 scrollbar-track-transparent">
-          {messages.map((message, index) => (
-            <div
-              key={index}
-              className={`flex items-start gap-4 ${
-                message.role === "user" ? "flex-row-reverse" : ""
-              }`}
-            >
-              <div
-                className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0
-                ${
-                  message.role === "ai" ? "bg-indigo-500/10" : "bg-blue-500/10"
-                }`}
+            <div className="flex space-x-3">
+              <button
+                onClick={saveAsNewProject}
+                className="text-xs px-3 py-1 bg-indigo-500/10 text-indigo-400 rounded-md hover:bg-indigo-500/20 transition-colors flex items-center gap-1"
               >
-                {message.role === "ai" ? (
-                  <svg
-                    className="w-4 h-4 text-indigo-400"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"
-                    />
-                  </svg>
-                ) : (
-                  <svg
-                    className="w-4 h-4 text-blue-400"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
-                    />
-                  </svg>
-                )}
-              </div>
+                <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4" />
+                </svg>
+                Save Project
+              </button>
+              
+              <button
+                onClick={goToDashboard}
+                className="text-xs px-3 py-1 bg-gray-700/20 text-gray-400 rounded-md hover:bg-gray-700/30 transition-colors flex items-center gap-1"
+              >
+                <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 10h16M4 14h16M4 18h16" />
+                </svg>
+                Projects
+              </button>
+            </div>
+          </div>
+          <div 
+            className="flex-1 px-4 py-5 overflow-y-auto space-y-5 scrollbar-hide"
+            style={{
+              scrollbarWidth: 'thin',
+              scrollbarColor: 'rgba(99, 102, 241, 0.3) transparent',
+              msOverflowStyle: 'none'
+            }}
+          >
+            <style jsx global>{`
+              .scrollbar-hide::-webkit-scrollbar {
+                width: 4px;
+                background-color: transparent;
+              }
+              .scrollbar-hide::-webkit-scrollbar-thumb {
+                background-color: rgba(99, 102, 241, 0.3);
+                border-radius: 10px;
+              }
+              .scrollbar-hide::-webkit-scrollbar-thumb:hover {
+                background-color: rgba(99, 102, 241, 0.5);
+              }
+              .scrollbar-hide::-webkit-scrollbar-track {
+                background-color: transparent;
+              }
+            `}</style>
+            {messages.map((message, index) => (
               <div
-                className={`flex-1 ${
-                  message.role === "user" ? "text-right" : ""
-                }`}
+                key={index}
+                className={`flex items-start gap-4 ${
+            message.role === "user" ? "flex-row-reverse" : ""
+                } animate-fadeIn transition-all duration-300`}
               >
                 <div
-                  className={`inline-block rounded-lg px-4 py-2 text-sm max-w-[85%]
-                  ${
-                    message.role === "ai"
-                      ? "bg-gray-800 text-gray-300"
-                      : "bg-indigo-500/10 text-indigo-400"
-                  }`}
+            className={`w-9 h-9 rounded-full flex items-center justify-center shrink-0 shadow-md
+            ${
+              message.role === "ai" 
+                ? "bg-gradient-to-br from-indigo-500 to-purple-600" 
+                : "bg-gradient-to-br from-blue-500 to-cyan-400"
+            }`}
                 >
-                  {message.content}
+            {message.role === "ai" ? (
+              <svg
+                className="w-5 h-5 text-white"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"
+                />
+              </svg>
+            ) : (
+              <svg
+                className="w-5 h-5 text-white"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
+                />
+              </svg>
+            )}
+                </div>
+                <div
+            className={`flex-1 ${
+              message.role === "user" ? "text-right" : ""
+            }`}
+                >
+            <div
+              className={`inline-block rounded-xl px-5 py-3 text-sm max-w-[85%] shadow-lg backdrop-blur-sm
+              ${
+                message.role === "ai"
+                  ? "bg-gray-800/80 text-gray-100 border border-gray-700"
+                  : "bg-gradient-to-r from-indigo-500/20 to-blue-500/20 text-blue-100 border border-indigo-500/30"
+              }`}
+            >
+              {message.content}
+            </div>
+            <div className="text-xs text-gray-500 mt-1 mx-1">
+              {message.role === "ai" ? "CodeVision AI" : "You"} · {index === messages.length - 1 ? "Just now" : "Earlier"}
+            </div>
                 </div>
               </div>
+            ))}
+            {messages.length === 0 && (
+              <div className="flex items-center justify-center h-full">
+                <div className="text-center p-8 rounded-xl bg-gray-800/30 backdrop-blur-sm border border-gray-700/50">
+            <div className="w-16 h-16 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-full flex items-center justify-center mx-auto mb-4">
+              <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+              </svg>
             </div>
-          ))}
-        </div>
+            <h3 className="text-lg font-medium text-white mb-2">Start a conversation</h3>
+            <p className="text-gray-400 text-sm">Describe your website idea or request code changes</p>
+                </div>
+              </div>
+            )}
+          </div>
 
-        {/* Chat Input - Improved spacing */}
-        <div className="p-6 border-t border-gray-800 bg-gray-900/90 backdrop-blur-sm">
-          <div className="flex flex-col gap-3">
-            <div className="p-[1px] rounded-lg bg-gradient-to-r from-indigo-500 to-blue-500">
-              <textarea
-                value={prompt}
-                onChange={(e) => setPrompt(e.target.value)}
-                placeholder="Describe your website or request changes..."
-                className="w-full p-4 rounded-lg bg-gray-900/90 border-none focus:outline-none text-white placeholder-gray-400 text-sm resize-none"
-                rows={3}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter" && !e.shiftKey) {
-                    e.preventDefault();
-                    if (prompt.trim()) {
-                      handleGenerate();
-                    }
-                  }
-                }}
+          {/* Chat Input - Improved spacing */}
+          <div className="p-6 border-t border-gray-800 bg-gray-900/90 backdrop-blur-sm">
+            <div className="flex flex-col gap-3">
+              <div className="p-[1px] rounded-lg bg-gradient-to-r from-indigo-500 to-blue-500">
+                <textarea
+            value={prompt}
+            onChange={(e) => setPrompt(e.target.value)}
+            placeholder="Describe your website or request changes..."
+            className="w-full p-4 rounded-lg bg-gray-900/90 border-none focus:outline-none text-white placeholder-gray-400 text-sm resize-none"
+            rows={3}
+            onKeyDown={(e) => {
+              if (e.key === "Enter" && !e.shiftKey) {
+                e.preventDefault();
+                if (prompt.trim()) {
+                  handleGenerate();
+                }
+              }
+            }}
               />
             </div>
             <button
