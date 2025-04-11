@@ -227,16 +227,11 @@ const Generator = () => {
       setIsLoading(true);
       setMessages((prev) => [...prev, { role: "user", content: prompt }]);
   
-      const response = await fetch("http://localhost:4000/api/generate", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ 
-          prompt,
-          selectedFile,
-          currentFiles: files
-        }),
+      
+      const response = await api.post('/generate', {
+        prompt,
+        selectedFile,
+        currentFiles: files
       });
   
       const data = await response.json();

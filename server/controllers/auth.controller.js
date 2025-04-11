@@ -67,9 +67,10 @@ export const login = async (req, res) => {
         // Set token in cookie
         res.cookie('access_token', token, {
             httpOnly: true,
-            maxAge: 24 * 60 * 60 * 1000,
-            sameSite: 'lax'
-        });
+            maxAge: 30 * 24 * 60 * 60 * 1000, // 30 days
+            sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
+            secure: process.env.NODE_ENV === 'production', 
+          });
         
         // Return user details and token
         res.status(200).json({

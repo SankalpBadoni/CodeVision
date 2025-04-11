@@ -1,10 +1,7 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import api from '../../utils/api';
 
-// API base URL
-const API_URL = 'http://localhost:4000/api/projects';
 
-// Async thunks
 export const fetchUserProjects = createAsyncThunk(
   'projects/fetchUserProjects',
   async (_, { rejectWithValue }) => {
