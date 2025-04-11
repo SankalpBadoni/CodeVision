@@ -68,8 +68,9 @@ export const login = async (req, res) => {
         res.cookie('access_token', token, {
             httpOnly: true,
             maxAge: 30 * 24 * 60 * 60 * 1000, // 30 days
-            sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
-            secure: process.env.NODE_ENV === 'production', 
+            sameSite: 'none', // Critical for cross-site requests
+            secure: true, // Required with sameSite=none
+            path: '/'
           });
         
         // Return user details and token
