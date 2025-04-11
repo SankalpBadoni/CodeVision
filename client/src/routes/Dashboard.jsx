@@ -1,8 +1,7 @@
 import { useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useSelector, useDispatch } from 'react-redux';
-import { fetchUserProjects } from '../redux/slices/ProjectSlice.js';
-import { setCurrentProject } from '../redux/slices/ProjectSlice.js';
+import { fetchUserProjects, setCurrentProject, deleteProject } from '../redux/slices/ProjectSlice.js';
 
 const Dashboard = () => {
   const { isLoggedIn } = useSelector((state) => state.auth);
@@ -31,6 +30,17 @@ const Dashboard = () => {
 
   const createNewProject = () => {
     navigate('/');
+  };
+  const handleDeleteProject = async (projectId) => {
+    if (window.confirm("Are you sure you want to delete this project? This action cannot be undone.")) {
+      try {
+        await dispatch(deleteProject(projectId)).unwrap();
+        // Refresh the project list after deletion
+        dispatch(fetchUserProjects());
+      } catch (error) {
+        console.error("Failed to delete project:", error);
+      }
+    }
   };
 
   if (!isLoggedIn) {
@@ -145,6 +155,7 @@ const Dashboard = () => {
                 key={project._id} 
                 project={project} 
                 onContinue={() => continueProject(project)} 
+                onDelete={() => handleDeleteProject(project._id)}
               />
             ))}
           </div>
@@ -186,7 +197,7 @@ const SaveIcon = () => (
   </svg>
 );
 
-const ProjectCard = ({ project, onContinue }) => {
+const ProjectCard = ({ project, onContinue, onDelete }) => {
   // console.log("💬 Project:", project);
   const formatDate = (dateString) => {
     const options = { year: 'numeric', month: 'short', day: 'numeric' };
@@ -220,8 +231,10 @@ const ProjectCard = ({ project, onContinue }) => {
         >
           Continue
         </button>
-        <button className="flex-1 text-sm py-2 bg-gray-700/20 text-gray-400 hover:bg-gray-700/30 rounded-md transition-colors border border-gray-700/20">
-          Export
+        <button 
+        onClick={onDelete}
+        className="flex-1 text-sm py-2 bg-gray-700/20 text-gray-400 hover:bg-gray-700/30 rounded-md transition-colors border border-gray-700/20">
+          Delete
         </button>
       </div>
     </div>
