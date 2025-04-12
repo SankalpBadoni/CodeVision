@@ -16,13 +16,29 @@ export const TextRevealCard = ({
   const [localWidth, setLocalWidth] = useState(0);
   const [isMouseOver, setIsMouseOver] = useState(false);
 
+  // Update dimensions when window resizes or on mount
   useEffect(() => {
-    if (cardRef.current) {
-      const { left, width: localWidth } =
-        cardRef.current.getBoundingClientRect();
-      setLeft(left);
-      setLocalWidth(localWidth);
-    }
+    const updateDimensions = () => {
+      if (cardRef.current) {
+        const rect = cardRef.current.getBoundingClientRect();
+        setLeft(rect.left);
+        setLocalWidth(rect.width);
+      }
+    };
+
+    // Initial calculation
+    updateDimensions();
+    
+    // Setup resize listener
+    window.addEventListener('resize', updateDimensions);
+    
+    // Re-calculate on scroll as position might change
+    window.addEventListener('scroll', updateDimensions);
+    
+    return () => {
+      window.removeEventListener('resize', updateDimensions);
+      window.removeEventListener('scroll', updateDimensions);
+    };
   }, []);
 
   function mouseMoveHandler(event) {
@@ -30,8 +46,10 @@ export const TextRevealCard = ({
 
     const { clientX } = event;
     if (cardRef.current) {
-      const relativeX = clientX - left;
-      setWidthPercentage((relativeX / localWidth) * 100);
+      // Recalculate position each time to ensure accuracy
+      const rect = cardRef.current.getBoundingClientRect();
+      const relativeX = clientX - rect.left;
+      setWidthPercentage((relativeX / rect.width) * 100);
     }
   }
 
@@ -46,8 +64,10 @@ export const TextRevealCard = ({
     event.preventDefault();
     const clientX = event.touches[0].clientX;
     if (cardRef.current) {
-      const relativeX = clientX - left;
-      setWidthPercentage((relativeX / localWidth) * 100);
+      // Recalculate position each time to ensure accuracy
+      const rect = cardRef.current.getBoundingClientRect();
+      const relativeX = clientX - rect.left;
+      setWidthPercentage((relativeX / rect.width) * 100);
     }
   }
 
@@ -62,11 +82,11 @@ export const TextRevealCard = ({
       onTouchMove={touchMoveHandler}
       ref={cardRef}
       className={cn(
-        "bg-transparent border border-white/[0.08] w-[40rem] rounded-lg p-8 relative overflow-hidden",
+        "bg-transparent border border-white/[0.08] w-full max-w-[40rem] mx-auto rounded-lg p-8 relative overflow-hidden",
         className
       )}>
       {children}
-      <div className="h-40  relative flex items-center overflow-hidden">
+      <div className="h-20  relative flex items-center overflow-hidden">
         <motion.div
           style={{
             width: "100%",
