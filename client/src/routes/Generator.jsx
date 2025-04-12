@@ -6,6 +6,7 @@ import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { useSelector, useDispatch } from 'react-redux';
 import { createProject, updateProject, fetchProjectById } from '../redux/slices/ProjectSlice.js';
+import api from "../utils/api";
 
 const Generator = () => {
   const [prompt, setPrompt] = useState("");
@@ -38,6 +39,8 @@ const Generator = () => {
   const [currentProjectId, setCurrentProjectId] = useState(() => {
     return localStorage.getItem("currentProjectId") || null;
   });
+  
+  const [showChat, setShowChat] = useState(true);
   const navigate = useNavigate();
   const { isLoggedIn } = useSelector((state) => state.auth);
   const { currentProject } = useSelector((state) => state.projects);
@@ -227,14 +230,14 @@ const Generator = () => {
       setIsLoading(true);
       setMessages((prev) => [...prev, { role: "user", content: prompt }]);
   
-      
       const response = await api.post('/generate', {
         prompt,
         selectedFile,
         currentFiles: files
       });
-  
-      const data = await response.json();
+      
+      // Axios already parses JSON, so we use response.data directly
+      const data = response.data;
   
       if (data.success) {
         if (data.multiFileUpdate && data.updatedFiles) {
@@ -301,7 +304,7 @@ const Generator = () => {
   };
 
   return (
-    <div className="flex h-screen bg-gray-900">
+    <div className="flex flex-col md:flex-row h-screen bg-gray-900">
       <ToastContainer 
         position="bottom-right"
         autoClose={3000}
@@ -315,8 +318,28 @@ const Generator = () => {
         theme="dark"
       />
       
+      {/* Mobile view toggle buttons */}
+      <div className="md:hidden flex border-b border-gray-800 bg-gray-900/90">
+        <button
+          onClick={() => setShowChat(true)}
+          className={`flex-1 py-3 text-center text-sm font-medium ${
+            showChat ? 'text-indigo-400 border-b-2 border-indigo-500' : 'text-gray-400'
+          }`}
+        >
+          Chat
+        </button>
+        <button
+          onClick={() => setShowChat(false)}
+          className={`flex-1 py-3 text-center text-sm font-medium ${
+            !showChat ? 'text-indigo-400 border-b-2 border-indigo-500' : 'text-gray-400'
+          }`}
+        >
+          Editor
+        </button>
+      </div>
+      
       {/* Left Side - Chat */}
-      <div className="w-1/3 border-r border-gray-800 bg-gray-900/50 flex flex-col h-screen">
+      <div className={`${showChat ? 'flex' : 'hidden'} md:flex md:w-1/3 border-r border-gray-800 bg-gray-900/50 flex-col h-[calc(100vh-48px)] md:h-screen`}>
           <div className="p-4 border-b border-gray-800 bg-gray-900/90 backdrop-blur-sm flex items-center justify-between">
             <Link to="/">
               <h2 className="text-lg font-semibold bg-gradient-to-r from-indigo-400 to-blue-500 text-transparent bg-clip-text">
@@ -324,30 +347,32 @@ const Generator = () => {
               </h2>
             </Link>
             
-            <div className="flex space-x-3">
+            <div className="flex space-x-2 md:space-x-3">
               <button
                 onClick={saveAsNewProject}
-                className="text-xs px-3 py-1 bg-indigo-500/10 text-indigo-400 rounded-md hover:bg-indigo-500/20 transition-colors flex items-center gap-1"
+                className="text-xs px-2 md:px-3 py-1 bg-indigo-500/10 text-indigo-400 rounded-md hover:bg-indigo-500/20 transition-colors flex items-center gap-1"
               >
                 <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4" />
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4" />
                 </svg>
-                Save Project
+                <span className="hidden md:inline">Save Project</span>
               </button>
               
               <button
                 onClick={goToDashboard}
-                className="text-xs px-3 py-1 bg-gray-700/20 text-gray-400 rounded-md hover:bg-gray-700/30 transition-colors flex items-center gap-1"
+                className="text-xs px-2 md:px-3 py-1 bg-gray-700/20 text-gray-400 rounded-md hover:bg-gray-700/30 transition-colors flex items-center gap-1"
               >
                 <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 10h16M4 14h16M4 18h16" />
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 10h16M4 14h16M4 18h16" />
                 </svg>
-                Projects
+                <span className="hidden md:inline">Projects</span>
               </button>
             </div>
           </div>
+          
+          {/* Chat messages area */}
           <div 
-            className="flex-1 px-4 py-5 overflow-y-auto space-y-5 scrollbar-hide"
+            className="flex-1 px-3 md:px-4 py-3 md:py-5 overflow-y-auto space-y-4 md:space-y-5 scrollbar-hide"
             style={{
               scrollbarWidth: 'thin',
               scrollbarColor: 'rgba(99, 102, 241, 0.3) transparent',
@@ -373,172 +398,173 @@ const Generator = () => {
             {messages.map((message, index) => (
               <div
                 key={index}
-                className={`flex items-start gap-4 ${
-            message.role === "user" ? "flex-row-reverse" : ""
+                className={`flex items-start gap-3 md:gap-4 ${
+                  message.role === "user" ? "flex-row-reverse" : ""
                 } animate-fadeIn transition-all duration-300`}
               >
                 <div
-            className={`w-9 h-9 rounded-full flex items-center justify-center shrink-0 shadow-md
-            ${
-              message.role === "ai" 
-                ? "bg-gradient-to-br from-indigo-500 to-purple-600" 
-                : "bg-gradient-to-br from-blue-500 to-cyan-400"
-            }`}
+                  className={`w-8 h-8 md:w-9 md:h-9 rounded-full flex items-center justify-center shrink-0 shadow-md
+                    ${
+                      message.role === "ai" 
+                        ? "bg-gradient-to-br from-indigo-500 to-purple-600" 
+                        : "bg-gradient-to-br from-blue-500 to-cyan-400"
+                    }`}
                 >
-            {message.role === "ai" ? (
-              <svg
-                className="w-5 h-5 text-white"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"
-                />
-              </svg>
-            ) : (
-              <svg
-                className="w-5 h-5 text-white"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
-                />
-              </svg>
-            )}
+                  {message.role === "ai" ? (
+                    <svg
+                      className="w-4 h-4 md:w-5 md:h-5 text-white"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"
+                      />
+                    </svg>
+                  ) : (
+                    <svg
+                      className="w-4 h-4 md:w-5 md:h-5 text-white"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
+                      />
+                    </svg>
+                  )}
                 </div>
                 <div
-            className={`flex-1 ${
-              message.role === "user" ? "text-right" : ""
-            }`}
+                  className={`flex-1 ${
+                    message.role === "user" ? "text-right" : ""
+                  }`}
                 >
-            <div
-              className={`inline-block rounded-xl px-5 py-3 text-sm max-w-[85%] shadow-lg backdrop-blur-sm
-              ${
-                message.role === "ai"
-                  ? "bg-gray-800/80 text-gray-100 border border-gray-700"
-                  : "bg-gradient-to-r from-indigo-500/20 to-blue-500/20 text-blue-100 border border-indigo-500/30"
-              }`}
-            >
-              {message.content}
-            </div>
-            <div className="text-xs text-gray-500 mt-1 mx-1">
-              {message.role === "ai" ? "CodeVision AI" : "You"} · {index === messages.length - 1 ? "Just now" : "Earlier"}
-            </div>
+                  <div
+                    className={`inline-block rounded-xl px-4 py-2 md:px-5 md:py-3 text-xs md:text-sm max-w-[90%] md:max-w-[85%] shadow-lg backdrop-blur-sm
+                      ${
+                        message.role === "ai"
+                          ? "bg-gray-800/80 text-gray-100 border border-gray-700"
+                          : "bg-gradient-to-r from-indigo-500/20 to-blue-500/20 text-blue-100 border border-indigo-500/30"
+                      }`}
+                  >
+                    {message.content}
+                  </div>
+                  <div className="text-xs text-gray-500 mt-1 mx-1">
+                    {message.role === "ai" ? "CodeVision AI" : "You"} · {index === messages.length - 1 ? "Just now" : "Earlier"}
+                  </div>
                 </div>
               </div>
             ))}
             {messages.length === 0 && (
               <div className="flex items-center justify-center h-full">
-                <div className="text-center p-8 rounded-xl bg-gray-800/30 backdrop-blur-sm border border-gray-700/50">
-            <div className="w-16 h-16 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-full flex items-center justify-center mx-auto mb-4">
-              <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
-              </svg>
-            </div>
-            <h3 className="text-lg font-medium text-white mb-2">Start a conversation</h3>
-            <p className="text-gray-400 text-sm">Describe your website idea or request code changes</p>
+                <div className="text-center p-4 md:p-8 rounded-xl bg-gray-800/30 backdrop-blur-sm border border-gray-700/50">
+                  <div className="w-12 h-12 md:w-16 md:h-16 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-full flex items-center justify-center mx-auto mb-3 md:mb-4">
+                    <svg className="w-6 h-6 md:w-8 md:h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+                    </svg>
+                  </div>
+                  <h3 className="text-base md:text-lg font-medium text-white mb-1 md:mb-2">Start a conversation</h3>
+                  <p className="text-gray-400 text-xs md:text-sm">Describe your website idea or request code changes</p>
                 </div>
               </div>
             )}
           </div>
 
-          {/* Chat Input - Improved spacing */}
-          <div className="p-6 border-t border-gray-800 bg-gray-900/90 backdrop-blur-sm">
-            <div className="flex flex-col gap-3">
+          {/* Chat Input - Fixed to ensure visibility on mobile */}
+          <div className="sticky bottom-0 p-3 md:p-6 border-t border-gray-800 bg-gray-900/90 backdrop-blur-sm">
+            <div className="flex flex-col gap-2 md:gap-3">
               <div className="p-[1px] rounded-lg bg-gradient-to-r from-indigo-500 to-blue-500">
                 <textarea
-            value={prompt}
-            onChange={(e) => setPrompt(e.target.value)}
-            placeholder="Describe your website or request changes..."
-            className="w-full p-4 rounded-lg bg-gray-900/90 border-none focus:outline-none text-white placeholder-gray-400 text-sm resize-none"
-            rows={3}
-            onKeyDown={(e) => {
-              if (e.key === "Enter" && !e.shiftKey) {
-                e.preventDefault();
-                if (prompt.trim()) {
-                  handleGenerate();
-                }
-              }
-            }}
-              />
-            </div>
-            <button
-              onClick={handleGenerate}
-              disabled={isLoading || !prompt.trim()}
-              className={`py-4 text-sm font-semibold bg-gradient-to-r from-indigo-600 to-blue-500 
-                hover:from-indigo-700 hover:to-blue-600 transition-all duration-300 rounded-lg 
-                flex items-center justify-center gap-2 shadow-lg hover:shadow-indigo-500/25
-                ${
-                  (isLoading || !prompt.trim()) &&
-                  "opacity-50 cursor-not-allowed"
-                }`}
-            >
-              {isLoading ? (
-                <>
-                  <svg
-                    className="animate-spin h-4 w-4"
-                    xmlns="http://www.w3.org/2000/svg"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                  >
-                    <circle
-                      className="opacity-25"
-                      cx="12"
-                      cy="12"
-                      r="10"
+                  value={prompt}
+                  onChange={(e) => setPrompt(e.target.value)}
+                  placeholder="Describe your website or request changes..."
+                  className="w-full p-3 md:p-4 rounded-lg bg-gray-900/90 border-none focus:outline-none text-white placeholder-gray-400 text-xs md:text-sm resize-none"
+                  rows={2}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" && !e.shiftKey) {
+                      e.preventDefault();
+                      if (prompt.trim()) {
+                        handleGenerate();
+                      }
+                    }
+                  }}
+                />
+              </div>
+              <button
+                onClick={handleGenerate}
+                disabled={isLoading || !prompt.trim()}
+                className={`py-2 md:py-4 text-xs md:text-sm font-semibold bg-gradient-to-r from-indigo-600 to-blue-500 
+                  hover:from-indigo-700 hover:to-blue-600 transition-all duration-300 rounded-lg 
+                  flex items-center justify-center gap-2 shadow-lg hover:shadow-indigo-500/25
+                  ${
+                    (isLoading || !prompt.trim()) &&
+                    "opacity-50 cursor-not-allowed"
+                  }`}
+              >
+                {isLoading ? (
+                  <>
+                    <svg
+                      className="animate-spin h-3 w-3 md:h-4 md:w-4"
+                      xmlns="http://www.w3.org/2000/svg"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                    >
+                      <circle
+                        className="opacity-25"
+                        cx="12"
+                        cy="12"
+                        r="10"
+                        stroke="currentColor"
+                        strokeWidth="4"
+                      ></circle>
+                      <path
+                        className="opacity-75"
+                        fill="currentColor"
+                        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                      ></path>
+                    </svg>
+                    <span>Generating...</span>
+                  </>
+                ) : (
+                  <>
+                    <span>Send Message</span>
+                    <svg
+                      className="w-3 h-3 md:w-4 md:h-4"
+                      fill="none"
                       stroke="currentColor"
-                      strokeWidth="4"
-                    ></circle>
-                    <path
-                      className="opacity-75"
-                      fill="currentColor"
-                      d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                    ></path>
-                  </svg>
-                  <span>Generating...</span>
-                </>
-              ) : (
-                <>
-                  <span>Generate</span>
-                  <svg
-                    className="w-4 h-4"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M13 10V3L4 14h7v7l9-11h-7z"
-                    />
-                  </svg>
-                </>
-              )}
-            </button>
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M13 10V3L4 14h7v7l9-11h-7z"
+                      />
+                    </svg>
+                  </>
+                )}
+              </button>
+            </div>
           </div>
         </div>
-      </div>
+      
 
       {/* Right Side - Editor and Files */}
-      <div className="flex-1 flex flex-col h-screen overflow-hidden">
-        {/* Files Header - Improved tab design */}
-        <div className="h-14 border-b border-gray-800 bg-gray-900/90 backdrop-blur-sm flex items-center px-6 justify-between">
-          <div className="flex items-center space-x-2">
+      <div className={`${!showChat ? 'flex' : 'hidden'} md:flex flex-1 flex-col h-[calc(100vh-48px)] md:h-screen overflow-hidden`}>
+        {/* Files Header - Improved tab design and mobile friendly */}
+        <div className="h-12 md:h-14 border-b border-gray-800 bg-gray-900/90 backdrop-blur-sm flex items-center px-3 md:px-6 justify-between">
+          <div className="flex items-center space-x-1 md:space-x-2 overflow-x-auto scrollbar-hide" style={{ scrollbarWidth: 'none' }}>
             {["index.html", "styles.css", "script.js"].map((file) => (
               <button
                 key={file}
                 onClick={() => setSelectedFile(file)}
-                className={`px-4 py-2 rounded-md text-sm flex items-center gap-2 transition-all duration-200
+                className={`px-2 md:px-4 py-1 md:py-2 rounded-md text-xs md:text-sm flex items-center gap-1 md:gap-2 transition-all duration-200 whitespace-nowrap
                   ${
                     selectedFile === file
                       ? "bg-indigo-500/10 text-indigo-400 border border-indigo-500/20 shadow-sm shadow-indigo-500/10"
@@ -552,8 +578,8 @@ const Generator = () => {
           </div>
 
           {/* File actions */}
-          <div className="flex items-center space-x-3">
-            <button className="p-2 text-gray-400 hover:text-indigo-400 transition-colors rounded-md hover:bg-gray-800">
+          <div className="flex items-center space-x-1 md:space-x-3">
+            <button className="p-1 md:p-2 text-gray-400 hover:text-indigo-400 transition-colors rounded-md hover:bg-gray-800">
               <svg
                 className="w-4 h-4"
                 fill="none"
@@ -569,13 +595,13 @@ const Generator = () => {
               </svg>
             </button>
 
-            <button onClick={copyFile} className="p-2 text-gray-400 hover:text-indigo-400 transition-colors rounded-md hover:bg-gray-800">
+            <button onClick={copyFile} className="p-1 md:p-2 text-gray-400 hover:text-indigo-400 transition-colors rounded-md hover:bg-gray-800">
               <Clipboard className="w-4 h-4" />
             </button>
           </div>
         </div>
 
-        {/* Editor - Improved container */}
+        {/* Editor - Improved container with mobile support */}
         <div className="flex-1 relative overflow-hidden">
           <Editor
             height="100%"
@@ -590,9 +616,9 @@ const Generator = () => {
               }));
             }}
             options={{
-              minimap: { enabled: true },
-              fontSize: 14,
-              padding: { top: 20 },
+              minimap: { enabled: false },
+              fontSize: window.innerWidth < 768 ? 12 : 14,
+              padding: { top: 10 },
               readOnly: false,
               scrollBeyondLastLine: false,
               smoothScrolling: true,
@@ -600,9 +626,9 @@ const Generator = () => {
               cursorSmoothCaretAnimation: true,
               formatOnPaste: true,
               formatOnType: true,
-              lineNumbers: "on",
-              lineDecorationsWidth: 8,
-              lineNumbersMinChars: 3,
+              lineNumbers: window.innerWidth < 640 ? "off" : "on",
+              lineDecorationsWidth: 4,
+              lineNumbersMinChars: 2,
               renderLineHighlight: "all",
               scrollbar: {
                 vertical: "visible",
@@ -648,18 +674,18 @@ const Generator = () => {
           />
         </div>
 
-        {/* Editor Footer - Improved design */}
-        <div className="h-8 border-t border-gray-800 bg-gray-900/90 backdrop-blur-sm flex items-center px-6 justify-between">
-          <div className="flex items-center space-x-4 text-xs text-gray-500">
-            <span className="flex items-center gap-2">
-              <div className="w-2 h-2 rounded-full bg-indigo-500"></div>
+        {/* Editor Footer - Improved design and mobile friendly */}
+        <div className="h-6 md:h-8 border-t border-gray-800 bg-gray-900/90 backdrop-blur-sm flex items-center px-3 md:px-6 justify-between text-[10px] md:text-xs">
+          <div className="flex items-center space-x-2 md:space-x-4 text-gray-500">
+            <span className="flex items-center gap-1 md:gap-2">
+              <div className="w-1.5 h-1.5 md:w-2 md:h-2 rounded-full bg-indigo-500"></div>
               {getFileLanguage(selectedFile).toUpperCase()}
             </span>
-            <span>UTF-8</span>
+            <span className="hidden md:inline">UTF-8</span>
           </div>
-          <div className="text-xs text-gray-500 flex items-center gap-2">
+          <div className="text-gray-500 flex items-center gap-2">
             <span>Line: 1</span>
-            <span>Col: 1</span>
+            <span className="hidden md:inline">Col: 1</span>
           </div>
         </div>
       </div>
@@ -684,7 +710,7 @@ const FileIcon = ({ filename }) => {
               strokeLinecap="round"
               strokeLinejoin="round"
               strokeWidth={2}
-              d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"
+              d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"
             />
           </svg>
         );
